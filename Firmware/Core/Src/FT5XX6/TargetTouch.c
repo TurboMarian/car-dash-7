@@ -2,7 +2,7 @@
  * Author: J.Bajic - 2020
  */
 
-#include <TargetTouch.h>
+#include "TargetTouch.h"
 
 static uint8_t isPressed = 0;
 

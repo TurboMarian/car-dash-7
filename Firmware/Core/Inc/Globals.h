@@ -13,27 +13,16 @@ extern "C" {
 #include <Def/STORAGE_Def.h>
 
 
-#define BH1750_ENABLED			0
-#define GPS_ENABLED				0
 #define CAN_ENABLED				1
 #define RGB_ENABLED				1
-#define UART_ENABLED			1
-#define IND_ENABLED 			1
-#define ALERT_ENABLED  			1
 
-#define LED_NUMBER				24
-#define PROTECTION_RPM_LED 		4
-#define LED_INVERTED 			0
-
-#define LCD_DEFAULT_BRIGHTNESS	500
-#define LED_DEFAULT_BRIGHTNESS	20
+#define LCD_DEFAULT_BRIGHTNESS	1000
 
 
 #define RPM_SWEEP	 			1
 #define PROTECTION_RPM_LOW 		6500
-#define PROTECTION_RPM_HIGH 	7500
-#define LCD_RPM_HIGH 			PROTECTION_RPM_HIGH
-
+#define PROTECTION_RPM_HIGH 	8000
+#define PROTECTION_RPM_LED 		6
 
 #define PROTECTION_OIL_LOW 		40
 #define PROTECTION_FUEL_LOW 	40
