@@ -29,7 +29,7 @@ void Screen1View::setupScreen() {
 	oilp_units.resizeToCurrentTextWithAlignment();
 	oilp_units.invalidate();
 
-	Unicode::strncpy(buffer, "kPa", 10);
+	Unicode::strncpy(buffer, "l", 10);
 	Unicode::snprintf(fuelp_unitsBuffer, 10, "%s", buffer);
 	fuelp_units.resizeToCurrentTextWithAlignment();
 	fuelp_units.invalidate();
@@ -71,7 +71,7 @@ void Screen1View::setupScreen() {
 	oilp_units.resizeToCurrentTextWithAlignment();
 	oilp_units.invalidate();
 
-	Unicode::strncpy(buffer, "FUEL P", 10);
+	Unicode::strncpy(buffer, "FUEL L", 10);
 	Unicode::snprintf(fuelp_labelBuffer, 10, "%s", buffer);
 	fuelp_units.resizeToCurrentTextWithAlignment();
 	fuelp_units.invalidate();
@@ -148,7 +148,7 @@ void Screen1View::handleTickEvent() {
 	oilp_value.invalidate();
 
 	fuelp_value.invalidate();
-	Unicode::snprintfFloat(buffer, 16, "%.1f", (float)(Current_Status.FUELP / 10.0));
+	Unicode::snprintfFloat(buffer, 16, "%.1f", (float)(Current_Status.FUELLEVEL / 10.0));
 	Unicode::snprintf(fuelp_valueBuffer, 16, "%s", buffer);
 	fuelp_value.resizeToCurrentTextWithAlignment();
 	fuelp_value.invalidate();

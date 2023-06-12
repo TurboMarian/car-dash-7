@@ -2119,6 +2119,10 @@ void Start_CAN_Task(void *argument)
                         Current_Status.BATT = (uint16_t)((RxData[3] << 8) + (RxData[2] & 0x00ff)) / 32;
                         // Current_Status.GEAR = (uint16_t)((RxData[7] << 8) + (RxData[6] & 0x00ff));
                         break;
+					case 0x5F5:
+						//Current_Status.BATT = (uint16_t)((RxData[3] << 8) + (RxData[2] & 0x00ff)) / 32;
+						Current_Status.FUELLEVEL = (uint16_t)((RxData[7] << 8) + (RxData[6] & 0x00ff)) * 100 / 100;
+						break;
                     case 0x5F6:
                         Current_Status.LAMBDA1 = (uint16_t)((RxData[1] << 8) + (RxData[0] & 0x00ff)) / 2;
                         Current_Status.LAMBDA2 = (uint16_t)((RxData[3] << 8) + (RxData[2] & 0x00ff)) / 2;

@@ -185,6 +185,8 @@ typedef struct {
 	int16_t FUELT;
 	int16_t OILT;
 
+	int16_t FUELLEVEL;
+
 	uint16_t BH1750_LUX;
 
 	uint16_t GPS_LATITUDE;
