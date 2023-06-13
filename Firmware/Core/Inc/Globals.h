@@ -13,13 +13,7 @@ extern "C" {
 #include <Def/STORAGE_Def.h>
 
 
-#define CAN_ENABLED				1
-#define RGB_ENABLED				1
-
 #define LCD_DEFAULT_BRIGHTNESS	1000
-
-
-#define RPM_SWEEP	 			1
 #define PROTECTION_RPM_LOW 		6500
 #define PROTECTION_RPM_HIGH 	8000
 #define PROTECTION_RPM_LED 		6
@@ -129,6 +123,10 @@ struct RGBLED {
 
 
 typedef struct {
+
+	uint8_t CAN_ENABLED;
+	uint8_t RGB_ENABLED;
+	uint8_t RPM_SWEEP;
 
 	uint8_t PRES_UNIT;
 	uint8_t TEMP_UNIT;

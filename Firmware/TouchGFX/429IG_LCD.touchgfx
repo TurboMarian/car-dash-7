@@ -691,10 +691,12 @@
     "DisplayOrientation": "Landscape",
     "Family": "STM32F4",
     "SubFamily": "STM32F429/439",
+    "Toolchain": "STM32CubeIDE",
     "Platform": "m4",
     "ProjectFile": "../LCD_CAR.ioc",
     "OptionalComponentsRoot": "../Middlewares/ST/touchgfx_components",
-    "OptionalComponents": []
+    "OptionalComponents": [],
+    "AdditionalFeatures": []
   },
-  "Version": "4.21.1"
+  "Version": "4.21.4"
 }

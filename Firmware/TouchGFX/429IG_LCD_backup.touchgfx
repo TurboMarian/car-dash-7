@@ -117,7 +117,7 @@
             "X": 951,
             "Y": 9,
             "Width": 44,
-            "Height": 96,
+            "Height": 97,
             "TextId": "__SingleUse_LQYM",
             "TextRotation": "0",
             "Color": {
@@ -138,7 +138,7 @@
             "X": 885,
             "Y": 100,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_W2NZ",
             "TextRotation": "0",
             "Color": {
@@ -159,7 +159,7 @@
             "X": 775,
             "Y": 100,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_G76O",
             "TextRotation": "0",
             "Color": {
@@ -180,7 +180,7 @@
             "X": 951,
             "Y": 157,
             "Width": 44,
-            "Height": 96,
+            "Height": 97,
             "TextId": "__SingleUse_391O",
             "TextRotation": "0",
             "Color": {
@@ -201,7 +201,7 @@
             "X": 884,
             "Y": 247,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_4QE0",
             "TextRotation": "0",
             "Color": {
@@ -222,7 +222,7 @@
             "X": 827,
             "Y": 247,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_6YBF",
             "TextRotation": "0",
             "Color": {
@@ -243,7 +243,7 @@
             "X": 951,
             "Y": 308,
             "Width": 44,
-            "Height": 96,
+            "Height": 97,
             "TextId": "__SingleUse_MP7X",
             "TextRotation": "0",
             "Color": {
@@ -264,7 +264,7 @@
             "X": 884,
             "Y": 400,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_L5WH",
             "TextRotation": "0",
             "Color": {
@@ -285,7 +285,7 @@
             "X": 809,
             "Y": 399,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_RPXE",
             "TextRotation": "0",
             "Color": {
@@ -306,7 +306,7 @@
             "X": 951,
             "Y": 455,
             "Width": 44,
-            "Height": 96,
+            "Height": 97,
             "TextId": "__SingleUse_TLZY",
             "TextRotation": "0",
             "Color": {
@@ -327,7 +327,7 @@
             "X": 884,
             "Y": 547,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_RLOQ",
             "TextRotation": "0",
             "Color": {
@@ -348,7 +348,7 @@
             "X": 695,
             "Y": 547,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_KCKH",
             "TextRotation": "0",
             "Color": {
@@ -369,7 +369,7 @@
             "X": 27,
             "Y": 9,
             "Width": 44,
-            "Height": 96,
+            "Height": 97,
             "TextId": "__SingleUse_LD25",
             "TextRotation": "0",
             "Color": {
@@ -390,7 +390,7 @@
             "X": 30,
             "Y": 97,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_4T7D",
             "TextRotation": "0",
             "Color": {
@@ -411,7 +411,7 @@
             "X": 169,
             "Y": 97,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_ERKY",
             "TextRotation": "0",
             "Color": {
@@ -432,7 +432,7 @@
             "X": 27,
             "Y": 157,
             "Width": 44,
-            "Height": 96,
+            "Height": 97,
             "TextId": "__SingleUse_Z15X",
             "TextRotation": "0",
             "Color": {
@@ -453,7 +453,7 @@
             "X": 30,
             "Y": 246,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_S5UQ",
             "TextRotation": "0",
             "Color": {
@@ -474,7 +474,7 @@
             "X": 110,
             "Y": 246,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_XBZK",
             "TextRotation": "0",
             "Color": {
@@ -495,7 +495,7 @@
             "X": 27,
             "Y": 308,
             "Width": 44,
-            "Height": 96,
+            "Height": 97,
             "TextId": "__SingleUse_GFHB",
             "TextRotation": "0",
             "Color": {
@@ -516,7 +516,7 @@
             "X": 30,
             "Y": 400,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_BVOP",
             "TextRotation": "0",
             "Color": {
@@ -537,7 +537,7 @@
             "X": 133,
             "Y": 400,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_R7A4",
             "TextRotation": "0",
             "Color": {
@@ -558,7 +558,7 @@
             "X": 27,
             "Y": 455,
             "Width": 44,
-            "Height": 96,
+            "Height": 97,
             "TextId": "__SingleUse_0AFA",
             "TextRotation": "0",
             "Color": {
@@ -579,7 +579,7 @@
             "X": 30,
             "Y": 547,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_MPLH",
             "TextRotation": "0",
             "Color": {
@@ -600,7 +600,7 @@
             "X": 243,
             "Y": 547,
             "Width": 101,
-            "Height": 30,
+            "Height": 31,
             "TextId": "__SingleUse_INAE",
             "TextRotation": "0",
             "Color": {
@@ -640,125 +640,9 @@
             },
             "ArcCapStyle": "Butt",
             "ArcOnTopOfNeedle": true
-          },
-          {
-            "Type": "FlexButton",
-            "Name": "flexButton1",
-            "X": 859,
-            "Width": 165,
-            "Height": 601,
-            "Alpha": 0,
-            "ButtonTrigger": {
-              "Type": "ClickButtonTrigger"
-            },
-            "ButtonStyles": [
-              {
-                "Type": "BoxWithBorderButtonStyle",
-                "Width": 165,
-                "Height": 601,
-                "LockToFlexButtonSize": true,
-                "BorderSize": 5,
-                "ColorReleased": {
-                  "Green": 102,
-                  "Blue": 153
-                },
-                "ColorPressed": {
-                  "Green": 153,
-                  "Blue": 204
-                },
-                "ColorBorderReleased": {
-                  "Green": 51,
-                  "Blue": 102
-                },
-                "ColorBorderPressed": {
-                  "Red": 51,
-                  "Green": 102,
-                  "Blue": 153
-                }
-              }
-            ],
-            "Clickable": true
           }
         ],
-        "Interactions": [
-          {
-            "InteractionName": "Interaction1",
-            "Trigger": {
-              "Type": "TriggerClicked",
-              "TriggerComponent": "flexButton1"
-            },
-            "Action": {
-              "Type": "ActionGotoScreen",
-              "ScreenTransitionType": "ScreenTransitionNone",
-              "ActionComponent": "Screen2"
-            }
-          }
-        ]
-      },
-      {
-        "Name": "Screen2",
-        "Components": [
-          {
-            "Type": "Image",
-            "Name": "image1",
-            "X": 12,
-            "Width": 1000,
-            "Height": 600,
-            "RelativeFilename": "basic_bg.png"
-          },
-          {
-            "Type": "FlexButton",
-            "Name": "flexButton1",
-            "Y": -1,
-            "Width": 165,
-            "Height": 601,
-            "Alpha": 0,
-            "ButtonTrigger": {
-              "Type": "ClickButtonTrigger"
-            },
-            "ButtonStyles": [
-              {
-                "Type": "BoxWithBorderButtonStyle",
-                "Width": 165,
-                "Height": 601,
-                "LockToFlexButtonSize": true,
-                "BorderSize": 5,
-                "ColorReleased": {
-                  "Green": 102,
-                  "Blue": 153
-                },
-                "ColorPressed": {
-                  "Green": 153,
-                  "Blue": 204
-                },
-                "ColorBorderReleased": {
-                  "Green": 51,
-                  "Blue": 102
-                },
-                "ColorBorderPressed": {
-                  "Red": 51,
-                  "Green": 102,
-                  "Blue": 153
-                }
-              }
-            ],
-            "Clickable": true
-          }
-        ],
-        "Interactions": [
-          {
-            "InteractionName": "Interaction1",
-            "Trigger": {
-              "Type": "TriggerClicked",
-              "TriggerComponent": "flexButton1"
-            },
-            "Action": {
-              "Type": "ActionGotoScreen",
-              "ScreenTransitionType": "ScreenTransitionNone",
-              "ActionComponent": "Screen1"
-            }
-          }
-        ]
+        "Interactions": []
       }
     ],
     "CustomContainerDefinitions": [],
@@ -770,7 +654,6 @@
     "SelectedColorDepth": 16,
     "StartupScreenName": "Screen1",
     "SelectedStartupLanguage": "GB",
-    "Skin": "Blue",
     "TouchGfxPath": "../Middlewares/ST/touchgfx",
     "UIPath": ".",
     "AvailableColorDepths": [
@@ -807,10 +690,11 @@
     "PortraitSkinY": 0,
     "DisplayOrientation": "Landscape",
     "Family": "STM32F4",
+    "SubFamily": "STM32F429/439",
     "Platform": "m4",
     "ProjectFile": "../LCD_CAR.ioc",
     "OptionalComponentsRoot": "../Middlewares/ST/touchgfx_components",
     "OptionalComponents": []
   },
-  "Version": "4.20.0"
+  "Version": "4.21.1"
 }
