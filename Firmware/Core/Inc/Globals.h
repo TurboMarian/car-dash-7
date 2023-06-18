@@ -12,8 +12,7 @@ extern "C" {
 #include <Def/IO_Def.h>
 #include <Def/STORAGE_Def.h>
 
-
-#define LCD_DEFAULT_BRIGHTNESS	1000
+#define LCD_DEFAULT_BRIGHTNESS	200
 #define PROTECTION_RPM_LOW 		6500
 #define PROTECTION_RPM_HIGH 	8000
 #define PROTECTION_RPM_LED 		6
@@ -33,24 +32,14 @@ extern uint8_t UART_recieved;
 extern uint8_t UART_buffer[64];
 
 #define USE_1024x600
-//#define USE_1280x480
 //#define USE_800x480
 
 #if defined(USE_1024x600)
 	#define LCD_RES_H  1024
-	#define LCD_RES_HS  2
+	#define LCD_RES_HS  21
 	#define LCD_RES_HBP  140
 	#define LCD_RES_HFP  160
 	#define LCD_RES_V  600
-	#define LCD_RES_VS  4
-	#define LCD_RES_VBP  12
-	#define LCD_RES_VFP  20
-#elif defined(USE_1280x480)
-	#define LCD_RES_H  1280
-	#define LCD_RES_HS  2
-	#define LCD_RES_HBP  140
-	#define LCD_RES_HFP  160
-	#define LCD_RES_V  480
 	#define LCD_RES_VS  4
 	#define LCD_RES_VBP  12
 	#define LCD_RES_VFP  20
