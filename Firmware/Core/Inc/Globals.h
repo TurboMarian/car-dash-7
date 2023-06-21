@@ -12,7 +12,7 @@ extern "C" {
 #include <Def/IO_Def.h>
 #include <Def/STORAGE_Def.h>
 
-#define LCD_DEFAULT_BRIGHTNESS	200
+#define LCD_DEFAULT_BRIGHTNESS	1000
 #define PROTECTION_RPM_LOW 		6500
 #define PROTECTION_RPM_HIGH 	8000
 #define PROTECTION_RPM_LED 		6
