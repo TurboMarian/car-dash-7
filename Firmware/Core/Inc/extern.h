@@ -8,7 +8,7 @@
 #ifndef __EXTERN_H_
 #define __EXTERN_H_
 
-#include "Globals.h"
+#include "Globals.hpp"
 
 extern Statuses Current_Status;
 extern FILE *FileBuffer;

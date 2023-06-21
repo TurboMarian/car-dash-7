@@ -5,8 +5,8 @@
  *      Author: Ben
  */
 
-#ifndef INC_DEF_STORAGE_DEF_H_
-#define INC_DEF_STORAGE_DEF_H_
+#ifndef INC_DEF_STORAGE_DEF_HPP_
+#define INC_DEF_STORAGE_DEF_HPP_
 
 
 typedef struct {
@@ -20,4 +20,4 @@ typedef struct {
 
 
 
-#endif /* INC_DEF_STORAGE_DEF_H_ */
+#endif /* INC_DEF_STORAGE_DEF_HPP_ */

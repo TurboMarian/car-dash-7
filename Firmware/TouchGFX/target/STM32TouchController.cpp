@@ -23,7 +23,7 @@
 #include <STM32TouchController.hpp>
 extern "C" {
 #include "../../Core/Src/FT5XX6/TargetTouch.h"
-#include <Globals.h>
+#include <Globals.hpp>
 }
 
 void STM32TouchController::init()

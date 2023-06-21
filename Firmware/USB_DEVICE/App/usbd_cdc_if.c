@@ -22,7 +22,7 @@
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-#include <Globals.h>
+#include <Globals.hpp>
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -268,7 +268,7 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 //	uint8_t len = (uint8_t)*Len;
 //	memcpy(UART_buffer, Buf, len);  // copy the data to the buffer
 //	memset(Buf, '\0', len);   // clear the Buf also
-	UART_recieved = 1;
+	//UART_recieved = 1;
 	return (USBD_OK);
   /* USER CODE END 6 */
 }

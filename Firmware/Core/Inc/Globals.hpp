@@ -7,12 +7,18 @@ extern "C" {
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
+
 #include <Def/CAN_Def.h>
 #include <Def/UNIT_Def.h>
 #include <Def/IO_Def.h>
-#include <Def/STORAGE_Def.h>
+#include <Def/STORAGE_Def.hpp>
+#include <Def/SCREEN_Def.h>
+#include <Def/SCREEN_Def.h>
 
-#define LCD_DEFAULT_BRIGHTNESS	1000
+#define CAN_SETUP_ID			0x580
+
+#define LCD_DEFAULT_BRIGHTNESS	200
 #define PROTECTION_RPM_LOW 		6500
 #define PROTECTION_RPM_HIGH 	8000
 #define PROTECTION_RPM_LED 		6
@@ -28,13 +34,21 @@ extern "C" {
 #define KPA_TO_PSI 				0.145038f
 #define AFR_TO_LAMBDA 			0.06802721088f
 
-extern uint8_t UART_recieved;
-extern uint8_t UART_buffer[64];
+#define SCREEN_CONTAINERS_COUNT 8
 
+//#define USE_1280x480
 #define USE_1024x600
-//#define USE_800x480
 
-#if defined(USE_1024x600)
+#if defined(USE_1280x480)
+	#define LCD_RES_H  480
+	#define LCD_RES_HS  2
+	#define LCD_RES_HBP  8
+	#define LCD_RES_HFP  5
+	#define LCD_RES_V  1280
+	#define LCD_RES_VS  20
+	#define LCD_RES_VBP  5
+	#define LCD_RES_VFP  5
+#elif defined(USE_1024x600)
 	#define LCD_RES_H  1024
 	#define LCD_RES_HS  21
 	#define LCD_RES_HBP  140
@@ -43,76 +57,26 @@ extern uint8_t UART_buffer[64];
 	#define LCD_RES_VS  4
 	#define LCD_RES_VBP  12
 	#define LCD_RES_VFP  20
-#else
-	#define LCD_RES_H  800
-	#define LCD_RES_HS  2
-	#define LCD_RES_HBP  10
-	#define LCD_RES_HFP  10
-	#define LCD_RES_V  480
-	#define LCD_RES_VS  2
-	#define LCD_RES_VBP  10
-	#define LCD_RES_VFP  10
 #endif
+
+
 
 typedef enum {
 	CAN_LINK = 0,
 	CAN_AIM,
-	CAN_MX5,
-	CAN_BMW_PHEV,
-	CAN_124,
+	CAN_MX5
 } CANDefEnum;
 
-typedef enum {
-	CH_MGP = 0,
-	CH_INJ_DC,
-	CH_INJ_DC_ST,
-	CH_INJ_PULSE,
-	CH_MAF,
-	CH_INJ_TIM,
-	CH_IGN_TIM,
-	CH_CAM_I_L,
-	CH_CAM_I_R,
-	CH_CAM_E_L,
-	CH_CAM_E_R,
-	CH_LAMBDA1,
-	CH_LAMBDA2,
-	CH_TRIG1_ERROR,
-	CH_FAULT_CODES,
-	CH_LF_SPEED,
-	CH_LR_SPEED,
-	CH_RF_SPEED,
-	CH_RR_SPEED,
-	CH_KNOCK1,
-	CH_KNOCK2,
-	CH_KNOCK3,
-	CH_KNOCK4,
-	CH_KNOCK5,
-	CH_KNOCK6,
-	CH_KNOCK7,
-	CH_KNOCK8,
-	CH_LIMITS,
-	CH_TPS,
-	CH_ECT,
-	CH_IAT,
-	CH_ETHANOL,
-	CH_MAP,
-	CH_BARO,
-	CH_BATT,
-	CH_FUELP,
-	CH_OILP,
-	CH_FUELT,
-	CH_OILT
-} ChannelEnum;
 
 struct RGBLED {
 	uint8_t enabled;
 	int color;
 };
 
-
-
 typedef struct {
 
+	uint8_t CAN1_ACTIVE;
+	uint8_t CAN2_ACTIVE;
 	uint8_t CAN_ENABLED;
 	uint8_t RGB_ENABLED;
 	uint8_t RPM_SWEEP;
@@ -120,7 +84,6 @@ typedef struct {
 	uint8_t PRES_UNIT;
 	uint8_t TEMP_UNIT;
 	uint8_t SPEED_UNIT;
-
 
 	uint16_t RPM;
 	uint16_t RPM_100;
@@ -174,8 +137,6 @@ typedef struct {
 
 	int16_t FUELLEVEL;
 
-	uint16_t BH1750_LUX;
-
 	uint16_t GPS_LATITUDE;
 	uint16_t GPS_LONGITUDE;
 	uint16_t GPS_FIXED;
@@ -198,6 +159,37 @@ typedef struct {
 	uint16_t IND_RIGHT;
 
 
+	bool OK_R1;
+	bool OK_R2;
+	bool OK_R3;
+	bool OK_R4;
+
+	bool OK_L1;
+	bool OK_L2;
+	bool OK_L3;
+	bool OK_L4;
+
+	bool WARNING_R1;
+	bool WARNING_R2;
+	bool WARNING_R3;
+	bool WARNING_R4;
+
+	bool WARNING_L1;
+	bool WARNING_L2;
+	bool WARNING_L3;
+	bool WARNING_L4;
+
+	bool ALERT_R1;
+	bool ALERT_R2;
+	bool ALERT_R3;
+	bool ALERT_R4;
+
+	bool ALERT_L1;
+	bool ALERT_L2;
+	bool ALERT_L3;
+	bool ALERT_L4;
+
+
 	uint16_t LED_BRIGHTNESS;
 	uint8_t LED_BRIGHTNESS_CHANGED;
 	uint16_t LCD_BRIGHTNESS;
@@ -212,6 +204,10 @@ typedef struct {
 
 
 	uint8_t CELL[16];
+
+	CONTAINER SCREEN_CONTAINERS[SCREEN_CONTAINERS_COUNT];
+	MESSAGE_CONTAINERS SCREEN_MESSAGE_CONTAINERS[1];
+	uint8_t SCREEN_FIELDS_CHANGED;
 
 } Statuses;
 

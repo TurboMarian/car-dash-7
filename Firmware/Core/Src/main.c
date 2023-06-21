@@ -27,7 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 // #include <File_Handling.h>
-#include "Globals.h"
+#include "Globals.hpp"
 #include "extern.h"
 #include "sdram.h"
 #include "WS2812/WS2812.hpp"
@@ -107,7 +107,14 @@ const osThreadAttr_t TouchGFXTask_attributes = {
 osThreadId_t RGB_TaskHandle;
 const osThreadAttr_t RGB_Task_attributes = {
   .name = "RGB_Task",
-  .stack_size = 512 * 4,
+  .stack_size = 1024 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for LOOKUP_Task */
+osThreadId_t LOOKUP_TaskHandle;
+const osThreadAttr_t LOOKUP_Task_attributes = {
+  .name = "LOOKUP_Task",
+  .stack_size = 64 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
 /* USER CODE BEGIN PV */
@@ -156,6 +163,7 @@ static void MX_TIM14_Init(void);
 void Start_START_Task(void *argument);
 void TouchGFX_Task(void *argument);
 void Start_RGB_Task(void *argument);
+void Start_LOOKUP_Task(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -255,6 +263,9 @@ int main(void)
   /* creation of RGB_Task */
   RGB_TaskHandle = osThreadNew(Start_RGB_Task, NULL, &RGB_Task_attributes);
 
+  /* creation of LOOKUP_Task */
+  LOOKUP_TaskHandle = osThreadNew(Start_LOOKUP_Task, NULL, &LOOKUP_Task_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -265,7 +276,6 @@ int main(void)
 
   /* Start scheduler */
   osKernelStart();
-
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -618,29 +628,45 @@ static void MX_LTDC_Init(void)
   /* USER CODE BEGIN LTDC_Init 1 */
 
   /* USER CODE END LTDC_Init 1 */
-
-
   hltdc.Instance = LTDC;
   hltdc.Init.HSPolarity = LTDC_HSPOLARITY_AL;
   hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AL;
   hltdc.Init.DEPolarity = LTDC_DEPOLARITY_AL;
   hltdc.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
+  hltdc.Init.HorizontalSync = 20;
+  hltdc.Init.VerticalSync = 3;
+  hltdc.Init.AccumulatedHBP = 160;
+  hltdc.Init.AccumulatedVBP = 15;
+  hltdc.Init.AccumulatedActiveW = 1184;
+  hltdc.Init.AccumulatedActiveH = 615;
+  hltdc.Init.TotalWidth = 1344;
+  hltdc.Init.TotalHeigh = 635;
   hltdc.Init.Backcolor.Blue = 0;
   hltdc.Init.Backcolor.Green = 0;
   hltdc.Init.Backcolor.Red = 0;
-
+  if (HAL_LTDC_Init(&hltdc) != HAL_OK)
+  {
+    Error_Handler();
+  }
   pLayerCfg.WindowX0 = 0;
+  pLayerCfg.WindowX1 = 1024;
   pLayerCfg.WindowY0 = 0;
+  pLayerCfg.WindowY1 = 600;
   pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
   pLayerCfg.Alpha = 255;
   pLayerCfg.Alpha0 = 0;
   pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA;
   pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
   pLayerCfg.FBStartAdress = 0xD0000000;
+  pLayerCfg.ImageWidth = 1024;
+  pLayerCfg.ImageHeight = 600;
   pLayerCfg.Backcolor.Blue = 0;
   pLayerCfg.Backcolor.Green = 0;
   pLayerCfg.Backcolor.Red = 0;
-
+  if (HAL_LTDC_ConfigLayer(&hltdc, &pLayerCfg, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN LTDC_Init 2 */
 
 	if (HAL_LTDC_DeInit(&hltdc) != HAL_OK) {
@@ -687,7 +713,7 @@ static void MX_SDIO_SD_Init(void)
   hsd.Init.ClockEdge = SDIO_CLOCK_EDGE_RISING;
   hsd.Init.ClockBypass = SDIO_CLOCK_BYPASS_DISABLE;
   hsd.Init.ClockPowerSave = SDIO_CLOCK_POWER_SAVE_DISABLE;
-  hsd.Init.BusWide = SDIO_BUS_WIDE_1B;
+  hsd.Init.BusWide = SDIO_BUS_WIDE_4B;
   hsd.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
   hsd.Init.ClockDiv = 0;
   /* USER CODE BEGIN SDIO_Init 2 */
@@ -1448,6 +1474,8 @@ static void MX_FMC_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOE_CLK_ENABLE();
@@ -1585,6 +1613,8 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
@@ -1603,6 +1633,200 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == INT_PIN) {
 		TOUCH_Set();
 	}
+}
+
+void CheckAlerts() {
+	Current_Status.SCREEN_CONTAINERS[4].Background_Color = (COLOR_RGB ) { 0, 0,
+					0 };
+
+	if (Current_Status.RPM >= PROTECTION_RPM_HIGH) {
+		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
+		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
+				(COLOR_RGB ) { 255, 0, 0 };
+		strcpy(Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text,
+				"DANGER TO RODS");
+
+		Current_Status.SCREEN_CONTAINERS[4].Background_Color = (COLOR_RGB ) {
+						255, 0, 0 };
+	} else if (Current_Status.RPM >= PROTECTION_RPM_LOW) {
+		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
+		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text_Color = (COLOR_RGB ) {
+						0, 0, 0 };
+		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
+				(COLOR_RGB ) { 255, 255, 0 };
+		strcpy(Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text,
+				"YOU SURE YOU WANT THIS");
+
+		Current_Status.SCREEN_CONTAINERS[4].Background_Color = (COLOR_RGB ) {
+						255, 255, 0 };
+	}
+}
+
+void Update_Data() {
+	for (int i = 0; i < SCREEN_CONTAINERS_COUNT; ++i) {
+		switch (Current_Status.SCREEN_CONTAINERS[i].Data.Channel) {
+		case CH_MGP:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.MGP;
+			break;
+		case CH_INJ_DC:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.INJ_DC;
+			break;
+		case CH_INJ_DC_ST:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.INJ_DC_ST;
+			break;
+		case CH_INJ_PULSE:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.INJ_PULSE;
+			break;
+		case CH_MAF:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.MAF;
+			break;
+		case CH_INJ_TIM:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.INJ_TIM;
+			break;
+		case CH_IGN_TIM:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.IGN_TIM;
+			break;
+		case CH_CAM_I_L:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.CAM_I_L;
+			break;
+		case CH_CAM_I_R:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.CAM_I_R;
+			break;
+		case CH_CAM_E_L:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.CAM_E_L;
+			break;
+		case CH_CAM_E_R:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.CAM_E_R;
+			break;
+		case CH_LAMBDA1:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.LAMBDA1;
+			break;
+		case CH_LAMBDA2:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.LAMBDA2;
+			break;
+		case CH_TRIG1_ERROR:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.TRIG1_ERROR;
+			break;
+		case CH_FAULT_CODES:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.FAULT_CODES;
+			break;
+		case CH_LF_SPEED:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.LF_SPEED;
+			break;
+		case CH_LR_SPEED:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.LR_SPEED;
+			break;
+		case CH_RF_SPEED:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.RF_SPEED;
+			break;
+		case CH_RR_SPEED:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.RR_SPEED;
+			break;
+		case CH_KNOCK1:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.KNOCK1;
+			break;
+		case CH_KNOCK2:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.KNOCK2;
+			break;
+		case CH_KNOCK3:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.KNOCK3;
+			break;
+		case CH_KNOCK4:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.KNOCK4;
+			break;
+		case CH_KNOCK5:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.KNOCK5;
+			break;
+		case CH_KNOCK6:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.KNOCK6;
+			break;
+		case CH_KNOCK7:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.KNOCK7;
+			break;
+		case CH_KNOCK8:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.KNOCK8;
+			break;
+		case CH_LIMITS:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.LIMITS;
+			break;
+		case CH_TPS:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.TPS;
+			break;
+		case CH_ECT:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.ECT;
+			break;
+		case CH_IAT:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.IAT;
+			break;
+		case CH_ETHANOL:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.ETHANOL;
+			break;
+		case CH_MAP:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.MAP;
+			break;
+		case CH_BARO:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.BARO;
+			break;
+		case CH_BATT:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.BATT;
+			break;
+		case CH_FUELP:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.FUELP;
+			break;
+		case CH_OILP:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.OILP;
+			break;
+		case CH_FUELT:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.FUELT;
+			break;
+		case CH_OILT:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.OILT;
+			break;
+		case CH_RPM:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.RPM;
+			break;
+		case CH_FUELL:
+			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+					Current_Status.FUELLEVEL;
+			break;
+		default:
+			break;
+		}
+	}
+	CheckAlerts();
 }
 
 void Update_RPM_Ranges() {
@@ -1626,9 +1850,19 @@ void Update_RPM_Ranges() {
 	PROTECTION_RPM_HIGH, 0, 360);
 	Current_Status.RPM_360 =
 			Current_Status.RPM_360 >= 360 ? 360 : Current_Status.RPM_360;
+
+	Update_Data();
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+
+	if (hcan->Instance == CAN1) {
+		Current_Status.CAN1_ACTIVE = true;
+	}
+	if (hcan->Instance == CAN2) {
+		Current_Status.CAN2_ACTIVE = true;
+	}
+
 	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, RxData)
 			== HAL_OK) {
 		if (Current_Status.CAN_ENABLED == 1) {
@@ -1872,174 +2106,291 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 }
 
 void SetScreen(void) {
-//	strcpy(Current_Status.SCREEN_FIELDS[0].Label.Label, "Coolant Temperature");
-//	Current_Status.SCREEN_FIELDS[0].Label.X = 23;
-//	Current_Status.SCREEN_FIELDS[0].Label.Y = 81;
-//	Current_Status.SCREEN_FIELDS[0].Label.Width = 101;
-//	Current_Status.SCREEN_FIELDS[0].Label.Height = 30;
-//	Current_Status.SCREEN_FIELDS[0].Label.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[0].Unit.Label, "°C");
-//	Current_Status.SCREEN_FIELDS[0].Unit.X = 390;
-//	Current_Status.SCREEN_FIELDS[0].Unit.Y = 81;
-//	Current_Status.SCREEN_FIELDS[0].Unit.Width = 101;
-//	Current_Status.SCREEN_FIELDS[0].Unit.Height = 30;
-//	Current_Status.SCREEN_FIELDS[0].Unit.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[0].ValueDefault, "0");
-//	Current_Status.SCREEN_FIELDS[0].Value.X = 23;
-//	Current_Status.SCREEN_FIELDS[0].Value.Y = 4;
-//	Current_Status.SCREEN_FIELDS[0].Value.Width = 44;
-//	Current_Status.SCREEN_FIELDS[0].Value.Height = 96;
-//	Current_Status.SCREEN_FIELDS[0].Value.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[1].Label.Label,
-//			"Intake Air Temperature");
-//	Current_Status.SCREEN_FIELDS[1].Label.X = 23;
-//	Current_Status.SCREEN_FIELDS[1].Label.Y = 196;
-//	Current_Status.SCREEN_FIELDS[1].Label.Width = 101;
-//	Current_Status.SCREEN_FIELDS[1].Label.Height = 30;
-//	Current_Status.SCREEN_FIELDS[1].Label.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[1].Unit.Label, "°C");
-//	Current_Status.SCREEN_FIELDS[1].Unit.X = 355;
-//	Current_Status.SCREEN_FIELDS[1].Unit.Y = 196;
-//	Current_Status.SCREEN_FIELDS[1].Unit.Width = 101;
-//	Current_Status.SCREEN_FIELDS[1].Unit.Height = 30;
-//	Current_Status.SCREEN_FIELDS[1].Unit.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[1].ValueDefault, "0");
-//	Current_Status.SCREEN_FIELDS[1].Value.X = 23;
-//	Current_Status.SCREEN_FIELDS[1].Value.Y = 119;
-//	Current_Status.SCREEN_FIELDS[1].Value.Width = 44;
-//	Current_Status.SCREEN_FIELDS[1].Value.Height = 96;
-//	Current_Status.SCREEN_FIELDS[1].Value.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[2].Label.Label, "OIL Pressure");
-//	Current_Status.SCREEN_FIELDS[2].Label.X = 23;
-//	Current_Status.SCREEN_FIELDS[2].Label.Y = 315;
-//	Current_Status.SCREEN_FIELDS[2].Label.Width = 101;
-//	Current_Status.SCREEN_FIELDS[2].Label.Height = 30;
-//	Current_Status.SCREEN_FIELDS[2].Label.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[2].Unit.Label, "kPa");
-//	Current_Status.SCREEN_FIELDS[2].Unit.X = 360;
-//	Current_Status.SCREEN_FIELDS[2].Unit.Y = 315;
-//	Current_Status.SCREEN_FIELDS[2].Unit.Width = 101;
-//	Current_Status.SCREEN_FIELDS[2].Unit.Height = 30;
-//	Current_Status.SCREEN_FIELDS[2].Unit.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[2].ValueDefault, "0");
-//	Current_Status.SCREEN_FIELDS[2].Value.X = 23;
-//	Current_Status.SCREEN_FIELDS[2].Value.Y = 238;
-//	Current_Status.SCREEN_FIELDS[2].Value.Width = 44;
-//	Current_Status.SCREEN_FIELDS[2].Value.Height = 96;
-//	Current_Status.SCREEN_FIELDS[2].Value.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[3].Label.Label, "FUEL Pressure");
-//	Current_Status.SCREEN_FIELDS[3].Label.X = 23;
-//	Current_Status.SCREEN_FIELDS[3].Label.Y = 430;
-//	Current_Status.SCREEN_FIELDS[3].Label.Width = 101;
-//	Current_Status.SCREEN_FIELDS[3].Label.Height = 30;
-//	Current_Status.SCREEN_FIELDS[3].Label.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[3].Unit.Label, "°C");
-//	Current_Status.SCREEN_FIELDS[3].Unit.X = 450;
-//	Current_Status.SCREEN_FIELDS[3].Unit.Y = 430;
-//	Current_Status.SCREEN_FIELDS[3].Unit.Width = 101;
-//	Current_Status.SCREEN_FIELDS[3].Unit.Height = 30;
-//	Current_Status.SCREEN_FIELDS[3].Unit.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[3].ValueDefault, "0");
-//	Current_Status.SCREEN_FIELDS[3].Value.X = 23;
-//	Current_Status.SCREEN_FIELDS[3].Value.Y = 353;
-//	Current_Status.SCREEN_FIELDS[3].Value.Width = 44;
-//	Current_Status.SCREEN_FIELDS[3].Value.Height = 96;
-//	Current_Status.SCREEN_FIELDS[3].Value.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[4].Label.Label, "Manifold Pressure");
-//	Current_Status.SCREEN_FIELDS[4].Label.X = 1160;
-//	Current_Status.SCREEN_FIELDS[4].Label.Y = 81;
-//	Current_Status.SCREEN_FIELDS[4].Label.Width = 101;
-//	Current_Status.SCREEN_FIELDS[4].Label.Height = 30;
-//	Current_Status.SCREEN_FIELDS[4].Label.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[4].Unit.Label, "°C");
-//	Current_Status.SCREEN_FIELDS[4].Unit.X = 825;
-//	Current_Status.SCREEN_FIELDS[4].Unit.Y = 81;
-//	Current_Status.SCREEN_FIELDS[4].Unit.Width = 101;
-//	Current_Status.SCREEN_FIELDS[4].Unit.Height = 30;
-//	Current_Status.SCREEN_FIELDS[4].Unit.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[4].ValueDefault, "0");
-//	Current_Status.SCREEN_FIELDS[4].Value.X = 1220;
-//	Current_Status.SCREEN_FIELDS[4].Value.Y = 4;
-//	Current_Status.SCREEN_FIELDS[4].Value.Width = 44;
-//	Current_Status.SCREEN_FIELDS[4].Value.Height = 96;
-//	Current_Status.SCREEN_FIELDS[4].Value.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[5].Label.Label, "Battery");
-//	Current_Status.SCREEN_FIELDS[5].Label.X = 1160;
-//	Current_Status.SCREEN_FIELDS[5].Label.Y = 196;
-//	Current_Status.SCREEN_FIELDS[5].Label.Width = 101;
-//	Current_Status.SCREEN_FIELDS[5].Label.Height = 30;
-//	Current_Status.SCREEN_FIELDS[5].Label.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[5].Unit.Label, "°C");
-//	Current_Status.SCREEN_FIELDS[5].Unit.X = 868;
-//	Current_Status.SCREEN_FIELDS[5].Unit.Y = 196;
-//	Current_Status.SCREEN_FIELDS[5].Unit.Width = 101;
-//	Current_Status.SCREEN_FIELDS[5].Unit.Height = 30;
-//	Current_Status.SCREEN_FIELDS[5].Unit.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[5].ValueDefault, "0");
-//	Current_Status.SCREEN_FIELDS[5].Value.X = 1220;
-//	Current_Status.SCREEN_FIELDS[5].Value.Y = 119;
-//	Current_Status.SCREEN_FIELDS[5].Value.Width = 44;
-//	Current_Status.SCREEN_FIELDS[5].Value.Height = 96;
-//	Current_Status.SCREEN_FIELDS[5].Value.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[6].Label.Label, "Throttle Position");
-//	Current_Status.SCREEN_FIELDS[6].Label.X = 1160;
-//	Current_Status.SCREEN_FIELDS[6].Label.Y = 315;
-//	Current_Status.SCREEN_FIELDS[6].Label.Width = 101;
-//	Current_Status.SCREEN_FIELDS[6].Label.Height = 30;
-//	Current_Status.SCREEN_FIELDS[6].Label.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[6].Unit.Label, "kPa");
-//	Current_Status.SCREEN_FIELDS[6].Unit.X = 858;
-//	Current_Status.SCREEN_FIELDS[6].Unit.Y = 315;
-//	Current_Status.SCREEN_FIELDS[6].Unit.Width = 101;
-//	Current_Status.SCREEN_FIELDS[6].Unit.Height = 30;
-//	Current_Status.SCREEN_FIELDS[6].Unit.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[6].ValueDefault, "0");
-//	Current_Status.SCREEN_FIELDS[6].Value.X = 1220;
-//	Current_Status.SCREEN_FIELDS[6].Value.Y = 238;
-//	Current_Status.SCREEN_FIELDS[6].Value.Width = 44;
-//	Current_Status.SCREEN_FIELDS[6].Value.Height = 96;
-//	Current_Status.SCREEN_FIELDS[6].Value.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[7].Label.Label, "Wideband");
-//	Current_Status.SCREEN_FIELDS[7].Label.X = 1160;
-//	Current_Status.SCREEN_FIELDS[7].Label.Y = 430;
-//	Current_Status.SCREEN_FIELDS[7].Label.Width = 101;
-//	Current_Status.SCREEN_FIELDS[7].Label.Height = 30;
-//	Current_Status.SCREEN_FIELDS[7].Label.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[7].Unit.Label, "°C");
-//	Current_Status.SCREEN_FIELDS[7].Unit.X = 770;
-//	Current_Status.SCREEN_FIELDS[7].Unit.Y = 430;
-//	Current_Status.SCREEN_FIELDS[7].Unit.Width = 101;
-//	Current_Status.SCREEN_FIELDS[7].Unit.Height = 30;
-//	Current_Status.SCREEN_FIELDS[7].Unit.Alignment = LEFT;
-//
-//	strcpy(Current_Status.SCREEN_FIELDS[7].ValueDefault, "0");
-//	Current_Status.SCREEN_FIELDS[7].Value.X = 1220;
-//	Current_Status.SCREEN_FIELDS[7].Value.Y = 353;
-//	Current_Status.SCREEN_FIELDS[7].Value.Width = 44;
-//	Current_Status.SCREEN_FIELDS[7].Value.Height = 96;
-//	Current_Status.SCREEN_FIELDS[7].Value.Alignment = LEFT;
+
+	//-----------------------------------------------------------------------------
+	//-------------------------------LEFT------------------------------------------
+	//-----------------------------------------------------------------------------
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[0].Label.Text,
+			"Coolant Temperature");
+	Current_Status.SCREEN_CONTAINERS[0].Label.X = 12;
+	Current_Status.SCREEN_CONTAINERS[0].Label.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[0].Label.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[0].Label.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[0].Label.Alignment = ALIGN_LEFT;
+	Current_Status.SCREEN_CONTAINERS[0].Label.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[0].Unit.Text, "°C");
+	Current_Status.SCREEN_CONTAINERS[0].Unit.X = 390;
+	Current_Status.SCREEN_CONTAINERS[0].Unit.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[0].Unit.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[0].Unit.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[0].Unit.Alignment = ALIGN_RIGHT;
+	Current_Status.SCREEN_CONTAINERS[0].Unit.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[0].Value.Text, "0");
+	Current_Status.SCREEN_CONTAINERS[0].Value.X = 10;
+	Current_Status.SCREEN_CONTAINERS[0].Value.Y = -12;
+	Current_Status.SCREEN_CONTAINERS[0].Value.Width = 44;
+	Current_Status.SCREEN_CONTAINERS[0].Value.Height = 96;
+	Current_Status.SCREEN_CONTAINERS[0].Value.Alignment = ALIGN_LEFT;
+	Current_Status.SCREEN_CONTAINERS[0].Value.Text_Color = (COLOR_RGB ) { 0,
+					255, 0 };
+
+	Current_Status.SCREEN_CONTAINERS[0].Data.Channel = CH_ECT;
+	Current_Status.SCREEN_CONTAINERS[0].Data.Adder = 0;
+	Current_Status.SCREEN_CONTAINERS[0].Data.Decimal = 0;
+	Current_Status.SCREEN_CONTAINERS[0].Data.Divider = 10;
+	Current_Status.SCREEN_CONTAINERS[0].Data.Default = 0;
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[1].Label.Text,
+			"Intake Air Temperature");
+	Current_Status.SCREEN_CONTAINERS[1].Label.X = 12;
+	Current_Status.SCREEN_CONTAINERS[1].Label.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[1].Label.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[1].Label.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[1].Label.Alignment = ALIGN_LEFT;
+	Current_Status.SCREEN_CONTAINERS[1].Label.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[1].Unit.Text, "°C");
+	Current_Status.SCREEN_CONTAINERS[1].Unit.X = 350;
+	Current_Status.SCREEN_CONTAINERS[1].Unit.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[1].Unit.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[1].Unit.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[1].Unit.Alignment = ALIGN_RIGHT;
+	Current_Status.SCREEN_CONTAINERS[1].Unit.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[1].Value.Text, "0");
+	Current_Status.SCREEN_CONTAINERS[1].Value.X = 10;
+	Current_Status.SCREEN_CONTAINERS[1].Value.Y = -12;
+	Current_Status.SCREEN_CONTAINERS[1].Value.Width = 44;
+	Current_Status.SCREEN_CONTAINERS[1].Value.Height = 96;
+	Current_Status.SCREEN_CONTAINERS[1].Value.Alignment = ALIGN_LEFT;
+	Current_Status.SCREEN_CONTAINERS[1].Value.Text_Color = (COLOR_RGB ) { 0, 0,
+					255 };
+
+	Current_Status.SCREEN_CONTAINERS[1].Data.Channel = CH_IAT;
+	Current_Status.SCREEN_CONTAINERS[1].Data.Adder = 0;
+	Current_Status.SCREEN_CONTAINERS[1].Data.Decimal = 0;
+	Current_Status.SCREEN_CONTAINERS[1].Data.Divider = 10;
+	Current_Status.SCREEN_CONTAINERS[1].Data.Default = 0;
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[2].Label.Text, "OIL Pressure");
+	Current_Status.SCREEN_CONTAINERS[2].Label.X = 12;
+	Current_Status.SCREEN_CONTAINERS[2].Label.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[2].Label.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[2].Label.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[2].Label.Alignment = ALIGN_LEFT;
+	Current_Status.SCREEN_CONTAINERS[2].Label.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[2].Unit.Text, "kPa");
+	Current_Status.SCREEN_CONTAINERS[2].Unit.X = 350;
+	Current_Status.SCREEN_CONTAINERS[2].Unit.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[2].Unit.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[2].Unit.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[2].Unit.Alignment = ALIGN_RIGHT;
+	Current_Status.SCREEN_CONTAINERS[2].Unit.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[2].Value.Text, "0");
+	Current_Status.SCREEN_CONTAINERS[2].Value.X = 10;
+	Current_Status.SCREEN_CONTAINERS[2].Value.Y = -12;
+	Current_Status.SCREEN_CONTAINERS[2].Value.Width = 44;
+	Current_Status.SCREEN_CONTAINERS[2].Value.Height = 96;
+	Current_Status.SCREEN_CONTAINERS[2].Value.Alignment = ALIGN_LEFT;
+	Current_Status.SCREEN_CONTAINERS[2].Value.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	Current_Status.SCREEN_CONTAINERS[2].Data.Channel = CH_OILP;
+	Current_Status.SCREEN_CONTAINERS[2].Data.Adder = 0;
+	Current_Status.SCREEN_CONTAINERS[2].Data.Decimal = 0;
+	Current_Status.SCREEN_CONTAINERS[2].Data.Divider = 1;
+	Current_Status.SCREEN_CONTAINERS[2].Data.Default = 0;
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[3].Label.Text, "FUEL Pressure");
+	Current_Status.SCREEN_CONTAINERS[3].Label.X = 12;
+	Current_Status.SCREEN_CONTAINERS[3].Label.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[3].Label.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[3].Label.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[3].Label.Alignment = ALIGN_LEFT;
+	Current_Status.SCREEN_CONTAINERS[3].Label.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[3].Unit.Text, "kPa");
+	Current_Status.SCREEN_CONTAINERS[3].Unit.X = 440;
+	Current_Status.SCREEN_CONTAINERS[3].Unit.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[3].Unit.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[3].Unit.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[3].Unit.Alignment = ALIGN_RIGHT;
+	Current_Status.SCREEN_CONTAINERS[3].Unit.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[3].Value.Text, "0");
+	Current_Status.SCREEN_CONTAINERS[3].Value.X = 10;
+	Current_Status.SCREEN_CONTAINERS[3].Value.Y = -12;
+	Current_Status.SCREEN_CONTAINERS[3].Value.Width = 44;
+	Current_Status.SCREEN_CONTAINERS[3].Value.Height = 96;
+	Current_Status.SCREEN_CONTAINERS[3].Value.Alignment = ALIGN_LEFT;
+	Current_Status.SCREEN_CONTAINERS[3].Value.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	Current_Status.SCREEN_CONTAINERS[3].Data.Channel = CH_FUELP;
+	Current_Status.SCREEN_CONTAINERS[3].Data.Adder = 0;
+	Current_Status.SCREEN_CONTAINERS[3].Data.Decimal = 0;
+	Current_Status.SCREEN_CONTAINERS[3].Data.Divider = 1;
+	Current_Status.SCREEN_CONTAINERS[3].Data.Default = 0;
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[4].Label.Text, "Manifold Pressure");
+	Current_Status.SCREEN_CONTAINERS[4].Label.X = 450;
+	Current_Status.SCREEN_CONTAINERS[4].Label.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[4].Label.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[4].Label.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[4].Label.Alignment = ALIGN_RIGHT;
+	Current_Status.SCREEN_CONTAINERS[4].Label.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[4].Unit.Text, "kPa");
+	Current_Status.SCREEN_CONTAINERS[4].Unit.X = 60;
+	Current_Status.SCREEN_CONTAINERS[4].Unit.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[4].Unit.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[4].Unit.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[4].Unit.Alignment = ALIGN_LEFT;
+	Current_Status.SCREEN_CONTAINERS[4].Unit.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[4].Value.Text, "0");
+	Current_Status.SCREEN_CONTAINERS[4].Value.X = 505;
+	Current_Status.SCREEN_CONTAINERS[4].Value.Y = -12;
+	Current_Status.SCREEN_CONTAINERS[4].Value.Width = 44;
+	Current_Status.SCREEN_CONTAINERS[4].Value.Height = 96;
+	Current_Status.SCREEN_CONTAINERS[4].Value.Alignment = ALIGN_RIGHT;
+	Current_Status.SCREEN_CONTAINERS[4].Value.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	Current_Status.SCREEN_CONTAINERS[4].Data.Channel = CH_MAP;
+	Current_Status.SCREEN_CONTAINERS[4].Data.Adder = 0;
+	Current_Status.SCREEN_CONTAINERS[4].Data.Decimal = 1;
+	Current_Status.SCREEN_CONTAINERS[4].Data.Divider = 10;
+	Current_Status.SCREEN_CONTAINERS[4].Data.Default = 0;
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[5].Label.Text, "Battery");
+	Current_Status.SCREEN_CONTAINERS[5].Label.X = 450;
+	Current_Status.SCREEN_CONTAINERS[5].Label.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[5].Label.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[5].Label.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[5].Label.Alignment = ALIGN_RIGHT;
+	Current_Status.SCREEN_CONTAINERS[5].Label.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[5].Unit.Text, "V");
+	Current_Status.SCREEN_CONTAINERS[5].Unit.X = 80;
+	Current_Status.SCREEN_CONTAINERS[5].Unit.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[5].Unit.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[5].Unit.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[5].Unit.Alignment = ALIGN_LEFT;
+	Current_Status.SCREEN_CONTAINERS[5].Unit.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[5].Value.Text, "0");
+	Current_Status.SCREEN_CONTAINERS[5].Value.X = 505;
+	Current_Status.SCREEN_CONTAINERS[5].Value.Y = -12;
+	Current_Status.SCREEN_CONTAINERS[5].Value.Width = 44;
+	Current_Status.SCREEN_CONTAINERS[5].Value.Height = 96;
+	Current_Status.SCREEN_CONTAINERS[5].Value.Alignment = ALIGN_RIGHT;
+	Current_Status.SCREEN_CONTAINERS[5].Value.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	Current_Status.SCREEN_CONTAINERS[5].Data.Channel = CH_BATT;
+	Current_Status.SCREEN_CONTAINERS[5].Data.Adder = 0;
+	Current_Status.SCREEN_CONTAINERS[5].Data.Decimal = 1;
+	Current_Status.SCREEN_CONTAINERS[5].Data.Divider = 100;
+	Current_Status.SCREEN_CONTAINERS[5].Data.Default = 0;
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[6].Label.Text, "Throttle Position");
+	Current_Status.SCREEN_CONTAINERS[6].Label.X = 450;
+	Current_Status.SCREEN_CONTAINERS[6].Label.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[6].Label.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[6].Label.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[6].Label.Alignment = ALIGN_RIGHT;
+	Current_Status.SCREEN_CONTAINERS[6].Label.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[6].Unit.Text, "%");
+	Current_Status.SCREEN_CONTAINERS[6].Unit.X = 70;
+	Current_Status.SCREEN_CONTAINERS[6].Unit.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[6].Unit.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[6].Unit.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[6].Unit.Alignment = ALIGN_LEFT;
+	Current_Status.SCREEN_CONTAINERS[6].Unit.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[6].Value.Text, "0");
+	Current_Status.SCREEN_CONTAINERS[6].Value.X = 505;
+	Current_Status.SCREEN_CONTAINERS[6].Value.Y = -12;
+	Current_Status.SCREEN_CONTAINERS[6].Value.Width = 44;
+	Current_Status.SCREEN_CONTAINERS[6].Value.Height = 96;
+	Current_Status.SCREEN_CONTAINERS[6].Value.Alignment = ALIGN_RIGHT;
+	Current_Status.SCREEN_CONTAINERS[6].Value.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	Current_Status.SCREEN_CONTAINERS[6].Data.Channel = CH_TPS;
+	Current_Status.SCREEN_CONTAINERS[6].Data.Adder = 0;
+	Current_Status.SCREEN_CONTAINERS[6].Data.Decimal = 0;
+	Current_Status.SCREEN_CONTAINERS[6].Data.Divider = 10;
+	Current_Status.SCREEN_CONTAINERS[6].Data.Default = 0;
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[7].Label.Text, "Wideband");
+	Current_Status.SCREEN_CONTAINERS[7].Label.X = 450;
+	Current_Status.SCREEN_CONTAINERS[7].Label.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[7].Label.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[7].Label.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[7].Label.Alignment = ALIGN_RIGHT;
+	Current_Status.SCREEN_CONTAINERS[7].Label.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[7].Unit.Text, "Lambda");
+	Current_Status.SCREEN_CONTAINERS[7].Unit.X = 50;
+	Current_Status.SCREEN_CONTAINERS[7].Unit.Y = 64;
+	Current_Status.SCREEN_CONTAINERS[7].Unit.Width = 101;
+	Current_Status.SCREEN_CONTAINERS[7].Unit.Height = 30;
+	Current_Status.SCREEN_CONTAINERS[7].Unit.Alignment = ALIGN_LEFT;
+	Current_Status.SCREEN_CONTAINERS[7].Unit.Text_Color = (COLOR_RGB ) { 255,
+					255, 255 };
+
+	strcpy(Current_Status.SCREEN_CONTAINERS[7].Value.Text, "0");
+	Current_Status.SCREEN_CONTAINERS[7].Value.X = 505;
+	Current_Status.SCREEN_CONTAINERS[7].Value.Y = -12;
+	Current_Status.SCREEN_CONTAINERS[7].Value.Width = 44;
+	Current_Status.SCREEN_CONTAINERS[7].Value.Height = 96;
+	Current_Status.SCREEN_CONTAINERS[7].Value.Alignment = ALIGN_RIGHT;
+	Current_Status.SCREEN_CONTAINERS[7].Value.Text_Color = (COLOR_RGB ) { 255,
+					0, 0 };
+
+	Current_Status.SCREEN_CONTAINERS[7].Data.Channel = CH_LAMBDA1;
+	Current_Status.SCREEN_CONTAINERS[7].Data.Adder = 0;
+	Current_Status.SCREEN_CONTAINERS[7].Data.Decimal = 2;
+	Current_Status.SCREEN_CONTAINERS[7].Data.Divider = 1000;
+	Current_Status.SCREEN_CONTAINERS[7].Data.Default = 0;
+
+	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
+	strcpy(Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text,
+			"Test Error Message");
+	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Alignment = ALIGN_CENTER;
+	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].X = 0;
+	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Y = 8;
+	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Width = 1280;
+	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Height = 78;
+	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
+			(COLOR_RGB ) { 255, 0, 0 };
+	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text_Color = (COLOR_RGB ) { 0,
+					255, 0 };
+
+	Current_Status.SCREEN_FIELDS_CHANGED = 1;
 }
 
 void initAll(void) {
@@ -2105,6 +2456,10 @@ void Start_START_Task(void *argument)
 		}
 
 		HAL_GPIO_TogglePin(LED_PJ12_GPIO_Port, LED_PJ12_Pin);
+
+		Current_Status.CAN1_ACTIVE = false;
+		Current_Status.CAN2_ACTIVE = false;
+
 		osDelay(1000);
 	}
 
@@ -2208,6 +2563,89 @@ void Start_RGB_Task(void *argument)
 		}
 	}
   /* USER CODE END Start_RGB_Task */
+}
+
+/* USER CODE BEGIN Header_Start_LOOKUP_Task */
+/**
+* @brief Function implementing the LOOKUP_Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Start_LOOKUP_Task */
+void Start_LOOKUP_Task(void *argument)
+{
+  /* USER CODE BEGIN Start_LOOKUP_Task */
+  /* Infinite loop */
+  for(;;)
+  {
+
+		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 0;
+
+		if (!Current_Status.CAN1_ACTIVE) {
+
+			Current_Status.RPM = 0;
+			Current_Status.RPM_RGB = 0;
+
+			Current_Status.MGP = 0;
+			Current_Status.INJ_DC = 0;
+			Current_Status.INJ_DC_ST = 0;
+			Current_Status.INJ_PULSE = 0;
+			Current_Status.MAF = 0;
+			Current_Status.INJ_TIM = 0;
+			Current_Status.IGN_TIM = 0;
+			Current_Status.CAM_I_L = 0;
+			Current_Status.CAM_I_R = 0;
+			Current_Status.CAM_E_L = 0;
+			Current_Status.CAM_E_R = 0;
+			Current_Status.LAMBDA1 = 0;
+			Current_Status.LAMBDA2 = 0;
+			Current_Status.TRIG1_ERROR = 0;
+			Current_Status.FAULT_CODES = 0;
+			Current_Status.LF_SPEED = 0;
+			Current_Status.LR_SPEED = 0;
+			Current_Status.RF_SPEED = 0;
+			Current_Status.RR_SPEED = 0;
+			Current_Status.KNOCK1 = 0;
+			Current_Status.KNOCK2 = 0;
+			Current_Status.KNOCK3 = 0;
+			Current_Status.KNOCK4 = 0;
+			Current_Status.KNOCK5 = 0;
+			Current_Status.KNOCK6 = 0;
+			Current_Status.KNOCK7 = 0;
+			Current_Status.KNOCK8 = 0;
+			Current_Status.LIMITS = 0;
+
+			Current_Status.TPS = 0;
+			Current_Status.ECT = 0;
+			Current_Status.IAT = 0;
+			Current_Status.ETHANOL = 0;
+			Current_Status.MAP = 0;
+			Current_Status.BARO = 0;
+			Current_Status.BATT = 0;
+			Current_Status.FUELP = 0;
+			Current_Status.OILP = 0;
+			Current_Status.FUELT = 0;
+			Current_Status.OILT = 0;
+
+			Current_Status.FUELLEVEL = 0;
+
+
+			clearWS2812All();
+			updateWS2812();
+
+			Update_RPM_Ranges();
+			Update_Data();
+
+			Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
+			Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text_Color = (COLOR_RGB ) { 0, 0, 0 };
+			Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Background_Color = (COLOR_RGB ) { 255, 255, 0 };
+			strcpy(Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text, "CONNECTION LOST");
+
+		}
+
+		osDelay(1000);
+  }
+  /* USER CODE END Start_LOOKUP_Task */
 }
 
 /**

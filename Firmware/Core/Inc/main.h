@@ -170,6 +170,7 @@ void show_neopixels();
 #define CAN2_SEL0_GPIO_Port GPIOK
 #define SPI1_FLASH_Pin GPIO_PIN_7
 #define SPI1_FLASH_GPIO_Port GPIOB
+
 /* USER CODE BEGIN Private defines */
 /* USER CODE END Private defines */
 
