@@ -2112,7 +2112,7 @@ void SetScreen(void) {
 	//-----------------------------------------------------------------------------
 
 	strcpy(Current_Status.SCREEN_CONTAINERS[0].Label.Text,
-			"Coolant Temperature");
+			"ECT");
 	Current_Status.SCREEN_CONTAINERS[0].Label.X = 12;
 	Current_Status.SCREEN_CONTAINERS[0].Label.Y = 64;
 	Current_Status.SCREEN_CONTAINERS[0].Label.Width = 101;
@@ -2146,7 +2146,7 @@ void SetScreen(void) {
 	Current_Status.SCREEN_CONTAINERS[0].Data.Default = 0;
 
 	strcpy(Current_Status.SCREEN_CONTAINERS[1].Label.Text,
-			"Intake Air Temperature");
+			"IAT");
 	Current_Status.SCREEN_CONTAINERS[1].Label.X = 12;
 	Current_Status.SCREEN_CONTAINERS[1].Label.Y = 64;
 	Current_Status.SCREEN_CONTAINERS[1].Label.Width = 101;
@@ -2179,7 +2179,7 @@ void SetScreen(void) {
 	Current_Status.SCREEN_CONTAINERS[1].Data.Divider = 10;
 	Current_Status.SCREEN_CONTAINERS[1].Data.Default = 0;
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[2].Label.Text, "OIL Pressure");
+	strcpy(Current_Status.SCREEN_CONTAINERS[2].Label.Text, "OIL Press");
 	Current_Status.SCREEN_CONTAINERS[2].Label.X = 12;
 	Current_Status.SCREEN_CONTAINERS[2].Label.Y = 64;
 	Current_Status.SCREEN_CONTAINERS[2].Label.Width = 101;
@@ -2212,7 +2212,7 @@ void SetScreen(void) {
 	Current_Status.SCREEN_CONTAINERS[2].Data.Divider = 1;
 	Current_Status.SCREEN_CONTAINERS[2].Data.Default = 0;
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[3].Label.Text, "FUEL Pressure");
+	strcpy(Current_Status.SCREEN_CONTAINERS[3].Label.Text, "FUEL Press");
 	Current_Status.SCREEN_CONTAINERS[3].Label.X = 12;
 	Current_Status.SCREEN_CONTAINERS[3].Label.Y = 64;
 	Current_Status.SCREEN_CONTAINERS[3].Label.Width = 101;
@@ -2245,8 +2245,8 @@ void SetScreen(void) {
 	Current_Status.SCREEN_CONTAINERS[3].Data.Divider = 1;
 	Current_Status.SCREEN_CONTAINERS[3].Data.Default = 0;
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[4].Label.Text, "Manifold Pressure");
-	Current_Status.SCREEN_CONTAINERS[4].Label.X = 450;
+	strcpy(Current_Status.SCREEN_CONTAINERS[4].Label.Text, "MAP");
+	Current_Status.SCREEN_CONTAINERS[4].Label.X = 350;
 	Current_Status.SCREEN_CONTAINERS[4].Label.Y = 64;
 	Current_Status.SCREEN_CONTAINERS[4].Label.Width = 101;
 	Current_Status.SCREEN_CONTAINERS[4].Label.Height = 30;
@@ -2255,7 +2255,7 @@ void SetScreen(void) {
 					255, 255 };
 
 	strcpy(Current_Status.SCREEN_CONTAINERS[4].Unit.Text, "kPa");
-	Current_Status.SCREEN_CONTAINERS[4].Unit.X = 60;
+	Current_Status.SCREEN_CONTAINERS[4].Unit.X = 150;
 	Current_Status.SCREEN_CONTAINERS[4].Unit.Y = 64;
 	Current_Status.SCREEN_CONTAINERS[4].Unit.Width = 101;
 	Current_Status.SCREEN_CONTAINERS[4].Unit.Height = 30;
@@ -2264,7 +2264,7 @@ void SetScreen(void) {
 					255, 255 };
 
 	strcpy(Current_Status.SCREEN_CONTAINERS[4].Value.Text, "0");
-	Current_Status.SCREEN_CONTAINERS[4].Value.X = 505;
+	Current_Status.SCREEN_CONTAINERS[4].Value.X = 350;
 	Current_Status.SCREEN_CONTAINERS[4].Value.Y = -12;
 	Current_Status.SCREEN_CONTAINERS[4].Value.Width = 44;
 	Current_Status.SCREEN_CONTAINERS[4].Value.Height = 96;
@@ -2279,7 +2279,7 @@ void SetScreen(void) {
 	Current_Status.SCREEN_CONTAINERS[4].Data.Default = 0;
 
 	strcpy(Current_Status.SCREEN_CONTAINERS[5].Label.Text, "Battery");
-	Current_Status.SCREEN_CONTAINERS[5].Label.X = 450;
+	Current_Status.SCREEN_CONTAINERS[5].Label.X = 350;
 	Current_Status.SCREEN_CONTAINERS[5].Label.Y = 64;
 	Current_Status.SCREEN_CONTAINERS[5].Label.Width = 101;
 	Current_Status.SCREEN_CONTAINERS[5].Label.Height = 30;
@@ -2288,7 +2288,7 @@ void SetScreen(void) {
 					255, 255 };
 
 	strcpy(Current_Status.SCREEN_CONTAINERS[5].Unit.Text, "V");
-	Current_Status.SCREEN_CONTAINERS[5].Unit.X = 80;
+	Current_Status.SCREEN_CONTAINERS[5].Unit.X = 150;
 	Current_Status.SCREEN_CONTAINERS[5].Unit.Y = 64;
 	Current_Status.SCREEN_CONTAINERS[5].Unit.Width = 101;
 	Current_Status.SCREEN_CONTAINERS[5].Unit.Height = 30;
@@ -2297,7 +2297,7 @@ void SetScreen(void) {
 					255, 255 };
 
 	strcpy(Current_Status.SCREEN_CONTAINERS[5].Value.Text, "0");
-	Current_Status.SCREEN_CONTAINERS[5].Value.X = 505;
+	Current_Status.SCREEN_CONTAINERS[5].Value.X = 350;
 	Current_Status.SCREEN_CONTAINERS[5].Value.Y = -12;
 	Current_Status.SCREEN_CONTAINERS[5].Value.Width = 44;
 	Current_Status.SCREEN_CONTAINERS[5].Value.Height = 96;
@@ -2311,8 +2311,8 @@ void SetScreen(void) {
 	Current_Status.SCREEN_CONTAINERS[5].Data.Divider = 100;
 	Current_Status.SCREEN_CONTAINERS[5].Data.Default = 0;
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[6].Label.Text, "Throttle Position");
-	Current_Status.SCREEN_CONTAINERS[6].Label.X = 450;
+	strcpy(Current_Status.SCREEN_CONTAINERS[6].Label.Text, "TPS");
+	Current_Status.SCREEN_CONTAINERS[6].Label.X = 350;
 	Current_Status.SCREEN_CONTAINERS[6].Label.Y = 64;
 	Current_Status.SCREEN_CONTAINERS[6].Label.Width = 101;
 	Current_Status.SCREEN_CONTAINERS[6].Label.Height = 30;
@@ -2321,7 +2321,7 @@ void SetScreen(void) {
 					255, 255 };
 
 	strcpy(Current_Status.SCREEN_CONTAINERS[6].Unit.Text, "%");
-	Current_Status.SCREEN_CONTAINERS[6].Unit.X = 70;
+	Current_Status.SCREEN_CONTAINERS[6].Unit.X = 150;
 	Current_Status.SCREEN_CONTAINERS[6].Unit.Y = 64;
 	Current_Status.SCREEN_CONTAINERS[6].Unit.Width = 101;
 	Current_Status.SCREEN_CONTAINERS[6].Unit.Height = 30;
@@ -2330,7 +2330,7 @@ void SetScreen(void) {
 					255, 255 };
 
 	strcpy(Current_Status.SCREEN_CONTAINERS[6].Value.Text, "0");
-	Current_Status.SCREEN_CONTAINERS[6].Value.X = 505;
+	Current_Status.SCREEN_CONTAINERS[6].Value.X = 350;
 	Current_Status.SCREEN_CONTAINERS[6].Value.Y = -12;
 	Current_Status.SCREEN_CONTAINERS[6].Value.Width = 44;
 	Current_Status.SCREEN_CONTAINERS[6].Value.Height = 96;
@@ -2345,7 +2345,7 @@ void SetScreen(void) {
 	Current_Status.SCREEN_CONTAINERS[6].Data.Default = 0;
 
 	strcpy(Current_Status.SCREEN_CONTAINERS[7].Label.Text, "Wideband");
-	Current_Status.SCREEN_CONTAINERS[7].Label.X = 450;
+	Current_Status.SCREEN_CONTAINERS[7].Label.X = 350;
 	Current_Status.SCREEN_CONTAINERS[7].Label.Y = 64;
 	Current_Status.SCREEN_CONTAINERS[7].Label.Width = 101;
 	Current_Status.SCREEN_CONTAINERS[7].Label.Height = 30;
@@ -2354,7 +2354,7 @@ void SetScreen(void) {
 					255, 255 };
 
 	strcpy(Current_Status.SCREEN_CONTAINERS[7].Unit.Text, "Lambda");
-	Current_Status.SCREEN_CONTAINERS[7].Unit.X = 50;
+	Current_Status.SCREEN_CONTAINERS[7].Unit.X = 150;
 	Current_Status.SCREEN_CONTAINERS[7].Unit.Y = 64;
 	Current_Status.SCREEN_CONTAINERS[7].Unit.Width = 101;
 	Current_Status.SCREEN_CONTAINERS[7].Unit.Height = 30;
@@ -2363,7 +2363,7 @@ void SetScreen(void) {
 					255, 255 };
 
 	strcpy(Current_Status.SCREEN_CONTAINERS[7].Value.Text, "0");
-	Current_Status.SCREEN_CONTAINERS[7].Value.X = 505;
+	Current_Status.SCREEN_CONTAINERS[7].Value.X = 350;
 	Current_Status.SCREEN_CONTAINERS[7].Value.Y = -12;
 	Current_Status.SCREEN_CONTAINERS[7].Value.Width = 44;
 	Current_Status.SCREEN_CONTAINERS[7].Value.Height = 96;
