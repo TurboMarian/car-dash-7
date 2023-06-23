@@ -9,19 +9,19 @@
       <Text Id="__SingleUse_V1SI" Alignment="Left" TypographyId="Sensor_Values">
         <Translation Language="GB">0</Translation>
       </Text>
-      <Text Id="__SingleUse_84RD" Alignment="Center" TypographyId="Sensor_Values">
+      <Text Id="__SingleUse_84RD" Alignment="Center" TypographyId="Message_Value">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
       <Text Id="__SingleUse_KFQ2" Alignment="Left" TypographyId="Sensor_Values">
         <Translation Language="GB">0</Translation>
       </Text>
-      <Text Id="__SingleUse_LJY2" Alignment="Right" TypographyId="Sensor_Values">
+      <Text Id="__SingleUse_LJY2" Alignment="Right" TypographyId="Message_Value">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
       <Text Id="__SingleUse_UMS8" Alignment="Left" TypographyId="Sensor_Values">
         <Translation Language="GB">0</Translation>
       </Text>
-      <Text Id="__SingleUse_EHAV" Alignment="Left" TypographyId="Sensor_Values">
+      <Text Id="__SingleUse_EHAV" Alignment="Left" TypographyId="Message_Value">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
       <Text Id="__SingleUse_ISK1" Alignment="Left" TypographyId="Sensor_Unit">
@@ -84,5 +84,6 @@
     <Typography Id="Sensor_Label" Font="bahnschrift.ttf" Size="25" Bpp="2" Direction="LTR" WildcardCharacters="0-9." WildcardCharacterRanges="0-9,A-Z,a-z,0x20,0x24,0x2C,0x2A,0x25,0xB0" />
     <Typography Id="Sensor_Unit" Font="bahnschrift.ttf" Size="25" Bpp="2" Direction="LTR" WildcardCharacters="0-9." WildcardCharacterRanges="0-9,A-Z,a-z,0x20,0x24,0x2C,0x2A,0x25,0xB0" />
     <Typography Id="Sensor_Values" Font="bahnschrift.ttf" Size="80" Bpp="2" Direction="LTR" WildcardCharacters="0-9." WildcardCharacterRanges="0-9,A-Z,a-z,0x20,0x24,0x2C,0x2A,0x25,0xB0" />
+    <Typography Id="Message_Value" Font="bahnschrift.ttf" Size="50" Bpp="2" Direction="LTR" WildcardCharacters="0-9." WildcardCharacterRanges="0-9,A-Z,a-z,0x20,0x24,0x2C,0x2A,0x25,0xB0" />
   </Typographies>
 </TextDatabase>

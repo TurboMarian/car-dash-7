@@ -1,11 +1,11 @@
 #ifndef MESSAGE_CONTAINER_HPP
 #define MESSAGE_CONTAINER_HPP
 
+#include <extern.hpp>
 #include <gui_generated/containers/message_containerBase.hpp>
 #include <touchgfx/Color.hpp>
 
 #include "main.h"
-#include "extern.h"
 
 class message_container : public message_containerBase
 {

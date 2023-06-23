@@ -1,11 +1,11 @@
 #ifndef VALUE_CONTAINER_HPP
 #define VALUE_CONTAINER_HPP
 
+#include <extern.hpp>
 #include <gui_generated/containers/value_containerBase.hpp>
 #include <touchgfx/Color.hpp>
 
 #include "main.h"
-#include "extern.h"
 
 class value_container : public value_containerBase
 {
@@ -16,7 +16,7 @@ public:
     virtual void initialize();
 
     virtual void initContainer(CONTAINER channel);
-    virtual void updateContainer(ITEM type, CONTAINER channel);
+    virtual void updateContainer(CONTAINER channel);
 protected:
 };
 

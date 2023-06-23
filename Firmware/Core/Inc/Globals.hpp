@@ -16,9 +16,9 @@ extern "C" {
 #include <Def/SCREEN_Def.h>
 #include <Def/SCREEN_Def.h>
 
-#define CAN_SETUP_ID			0x580
 
-#define LCD_DEFAULT_BRIGHTNESS	200
+#define LCD_ORIENTATION_LANDSCAPE 0x01
+#define LCD_DEFAULT_BRIGHTNESS	1000
 #define PROTECTION_RPM_LOW 		6500
 #define PROTECTION_RPM_HIGH 	8000
 #define PROTECTION_RPM_LED 		6
@@ -35,6 +35,10 @@ extern "C" {
 #define AFR_TO_LAMBDA 			0.06802721088f
 
 #define SCREEN_CONTAINERS_COUNT 8
+
+#define UART_RX_size 			2048
+#define GPS_RX_size 			2048
+#define CAN_SETUP_ID			0x580
 
 //#define USE_1280x480
 #define USE_1024x600

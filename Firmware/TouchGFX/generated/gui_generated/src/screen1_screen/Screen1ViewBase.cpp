@@ -15,28 +15,28 @@ Screen1ViewBase::Screen1ViewBase()
     background.setColor(touchgfx::Color::getColorFromRGB(0, 0, 0));
     add(background);
 
-    container_0.setXY(21, 12);
+    container_0.setXY(19, 14);
     add(container_0);
 
-    container_1.setXY(21, 160);
+    container_1.setXY(19, 162);
     add(container_1);
 
-    container_2.setXY(21, 311);
+    container_2.setXY(19, 313);
     add(container_2);
 
-    container_3.setXY(21, 464);
+    container_3.setXY(19, 462);
     add(container_3);
 
-    container_4.setXY(573, 12);
+    container_4.setXY(575, 14);
     add(container_4);
 
-    container_5.setXY(573, 160);
+    container_5.setXY(575, 162);
     add(container_5);
 
-    container_6.setXY(573, 311);
+    container_6.setXY(575, 313);
     add(container_6);
 
-    container_7.setXY(573, 464);
+    container_7.setXY(575, 462);
     add(container_7);
 
     image1.setXY(-3, -9);
@@ -93,7 +93,7 @@ Screen1ViewBase::Screen1ViewBase()
     gauge1.setSteadyNeedleRenderingAlgorithm(touchgfx::TextureMapper::BILINEAR_INTERPOLATION);
     add(gauge1);
 
-    message_container_0.setXY(0, 503);
+    message_container_0.setXY(0, 520);
     add(message_container_0);
 }
 

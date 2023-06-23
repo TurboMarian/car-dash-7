@@ -89,14 +89,19 @@ typedef struct {
 
 
 typedef struct {
+	uint8_t Enabled;
 	CHANNEL Channel;
 	uint16_t Value;
 	uint8_t Decimal;
 	uint16_t Adder;
 	uint16_t Divider;
 	uint16_t Default;
-	RANGE_COLOR Min_Color;
-	RANGE_COLOR Max_Color;
+	uint16_t Min;
+	char Min_Text[256];
+	COLOR_RGB Min_Color;
+	uint16_t Max;
+	char Max_Text[256];
+	COLOR_RGB Max_Color;
 } DATA;
 
 typedef struct {

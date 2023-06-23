@@ -55,9 +55,6 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
-void Neopixel_setup(void);
-void show_neopixels();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

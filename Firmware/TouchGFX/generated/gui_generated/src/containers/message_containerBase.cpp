@@ -8,12 +8,12 @@
 message_containerBase::message_containerBase()
 {
     setWidth(1024);
-    setHeight(96);
-    container_background.setPosition(0, 0, 1024, 96);
+    setHeight(80);
+    container_background.setPosition(0, 0, 1024, 80);
     container_background.setColor(touchgfx::Color::getColorFromRGB(255, 0, 0));
     add(container_background);
 
-    container_value_L.setPosition(0, -1, 1024, 97);
+    container_value_L.setPosition(0, 0, 1024, 80);
     container_value_L.setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
     container_value_L.setLinespacing(0);
     Unicode::snprintf(container_value_LBuffer, CONTAINER_VALUE_L_SIZE, "%s", touchgfx::TypedText(T___SINGLEUSE_UMS8).getText());
@@ -21,7 +21,7 @@ message_containerBase::message_containerBase()
     container_value_L.setTypedText(touchgfx::TypedText(T___SINGLEUSE_EHAV));
     add(container_value_L);
 
-    container_value_R.setPosition(0, -1, 1024, 97);
+    container_value_R.setPosition(0, 0, 1024, 80);
     container_value_R.setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
     container_value_R.setLinespacing(0);
     Unicode::snprintf(container_value_RBuffer, CONTAINER_VALUE_R_SIZE, "%s", touchgfx::TypedText(T___SINGLEUSE_KFQ2).getText());
@@ -29,7 +29,7 @@ message_containerBase::message_containerBase()
     container_value_R.setTypedText(touchgfx::TypedText(T___SINGLEUSE_LJY2));
     add(container_value_R);
 
-    container_value_C.setPosition(0, -1, 1024, 97);
+    container_value_C.setPosition(0, 0, 1024, 80);
     container_value_C.setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
     container_value_C.setLinespacing(0);
     Unicode::snprintf(container_value_CBuffer, CONTAINER_VALUE_C_SIZE, "%s", touchgfx::TypedText(T___SINGLEUSE_V1SI).getText());

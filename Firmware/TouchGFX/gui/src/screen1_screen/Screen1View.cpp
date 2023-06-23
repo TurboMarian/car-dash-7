@@ -1,7 +1,7 @@
+#include <extern.hpp>
 #include <gui/screen1_screen/Screen1View.hpp>
 
 #include "main.h"
-#include "extern.h"
 
 Screen1View::Screen1View() {
 
@@ -51,28 +51,28 @@ void Screen1View::handleTickEvent() {
 		Current_Status.SCREEN_FIELDS_CHANGED = false;
 	}
 
-	container_0.updateContainer(VALUE, Current_Status.SCREEN_CONTAINERS[0]);
+	container_0.updateContainer(Current_Status.SCREEN_CONTAINERS[0]);
 	container_0.invalidate();
 
-	container_1.updateContainer(VALUE, Current_Status.SCREEN_CONTAINERS[1]);
+	container_1.updateContainer(Current_Status.SCREEN_CONTAINERS[1]);
 	container_1.invalidate();
 
-	container_2.updateContainer(VALUE, Current_Status.SCREEN_CONTAINERS[2]);
+	container_2.updateContainer(Current_Status.SCREEN_CONTAINERS[2]);
 	container_2.invalidate();
 
-	container_3.updateContainer(VALUE, Current_Status.SCREEN_CONTAINERS[3]);
+	container_3.updateContainer(Current_Status.SCREEN_CONTAINERS[3]);
 	container_3.invalidate();
 
-	container_4.updateContainer(VALUE, Current_Status.SCREEN_CONTAINERS[4]);
+	container_4.updateContainer(Current_Status.SCREEN_CONTAINERS[4]);
 	container_4.invalidate();
 
-	container_5.updateContainer(VALUE, Current_Status.SCREEN_CONTAINERS[5]);
+	container_5.updateContainer(Current_Status.SCREEN_CONTAINERS[5]);
 	container_5.invalidate();
 
-	container_6.updateContainer(VALUE, Current_Status.SCREEN_CONTAINERS[6]);
+	container_6.updateContainer(Current_Status.SCREEN_CONTAINERS[6]);
 	container_6.invalidate();
 
-	container_7.updateContainer(VALUE, Current_Status.SCREEN_CONTAINERS[7]);
+	container_7.updateContainer(Current_Status.SCREEN_CONTAINERS[7]);
 	container_7.invalidate();
 
 
