@@ -2687,8 +2687,9 @@ void Start_CONFIG_Task(void *argument) {
 	for (;;) {
 
 
-		uint8_t buffer[] = "Hello, From Dash 7\r\n";
-		CDC_Transmit_FS(buffer, sizeof(buffer));
+
+
+		//CDC_Transmit_FS(buffer, sizeof(buffer));
 
 
 
@@ -2697,17 +2698,33 @@ void Start_CONFIG_Task(void *argument) {
 			uint8_t index = 0;
 
 			switch (UART_RX_buffer[0]) {
-				case 'S':
-
+				case 'S'://SET
 					switch (UART_RX_buffer[1]) {
-						case 'C':
+						case 'C'://CONTAINER
 							index = ((uint8_t)UART_RX_buffer[2]) - 48;
 							Set_Screen_Container(index);
 							break;
 					}
 					break;
-				case 'R':
-
+				case 'R'://READ
+					switch (UART_RX_buffer[1]) {
+						case 'V'://VERSION
+							switch (UART_RX_buffer[2]) {
+								case 'H'://HARDWARE
+									{
+										uint8_t buffer[] =  "OPFD7\r\n";
+										CDC_Transmit_FS(buffer, sizeof(buffer));
+									}
+									break;
+								case 'F'://FIRMWARE
+									{
+										uint8_t buffer[] =  "Version 0.1 beta\r\n";
+										CDC_Transmit_FS(buffer, sizeof(buffer));
+									}
+									break;
+							}
+							break;
+					}
 					break;
 			}
 			UART_RX_set = 0;
