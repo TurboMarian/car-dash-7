@@ -2115,6 +2115,22 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 			default:
 				break;
 			}
+
+			if(RxHeader.StdId == 0x18A)
+			{
+				if(RxData[0] == 0x01)
+					Current_Status.SCREEN_CONTAINERS[0].Background_Color = (COLOR_RGB ) { 255, 0, 0 };
+				else if(RxData[0] == 0x02)
+					Current_Status.SCREEN_CONTAINERS[1].Background_Color = (COLOR_RGB ) { 255, 0, 0 };
+				else if(RxData[0] == 0x04)
+					Current_Status.SCREEN_CONTAINERS[2].Background_Color = (COLOR_RGB ) { 255, 0, 0 };
+				else
+				{
+					Current_Status.SCREEN_CONTAINERS[0].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
+					Current_Status.SCREEN_CONTAINERS[1].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
+					Current_Status.SCREEN_CONTAINERS[2].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
+				}
+			}
 			Update_RPM_Ranges();
 		}
 	}
