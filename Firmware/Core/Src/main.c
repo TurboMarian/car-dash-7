@@ -2226,7 +2226,7 @@ void SetScreen(void) {
 	Current_Status.SCREEN_CONTAINERS[2].Data.Channel = CH_OILP;
 	Current_Status.SCREEN_CONTAINERS[2].Data.Adder = 0;
 	Current_Status.SCREEN_CONTAINERS[2].Data.Decimal = 0;
-	Current_Status.SCREEN_CONTAINERS[2].Data.Divider = 1;
+	Current_Status.SCREEN_CONTAINERS[2].Data.Divider = 10;
 	Current_Status.SCREEN_CONTAINERS[2].Data.Default = 0;
 
 	//-----------------------------------------------------------------------------
@@ -2261,7 +2261,7 @@ void SetScreen(void) {
 	Current_Status.SCREEN_CONTAINERS[3].Data.Channel = CH_FUELP;
 	Current_Status.SCREEN_CONTAINERS[3].Data.Adder = 0;
 	Current_Status.SCREEN_CONTAINERS[3].Data.Decimal = 0;
-	Current_Status.SCREEN_CONTAINERS[3].Data.Divider = 1;
+	Current_Status.SCREEN_CONTAINERS[3].Data.Divider = 10;
 	Current_Status.SCREEN_CONTAINERS[3].Data.Default = 0;
 
 	//-----------------------------------------------------------------------------
@@ -2297,7 +2297,7 @@ void SetScreen(void) {
 
 	Current_Status.SCREEN_CONTAINERS[4].Data.Channel = CH_MAP;
 	Current_Status.SCREEN_CONTAINERS[4].Data.Adder = 0;
-	Current_Status.SCREEN_CONTAINERS[4].Data.Decimal = 1;
+	Current_Status.SCREEN_CONTAINERS[4].Data.Decimal = 0;
 	Current_Status.SCREEN_CONTAINERS[4].Data.Divider = 10;
 	Current_Status.SCREEN_CONTAINERS[4].Data.Default = 0;
 
