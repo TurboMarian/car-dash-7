@@ -2124,12 +2124,44 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 					Current_Status.SCREEN_CONTAINERS[1].Background_Color = (COLOR_RGB ) { 255, 0, 0 };
 				else if(RxData[0] == 0x04)
 					Current_Status.SCREEN_CONTAINERS[2].Background_Color = (COLOR_RGB ) { 255, 0, 0 };
+				else if(RxData[1] == 0x02)
+				{
+					Current_Status.LCD_BRIGHTNESS = Current_Status.LCD_BRIGHTNESS == 1000 ? Current_Status.LCD_BRIGHTNESS : Current_Status.LCD_BRIGHTNESS + 50;
+					Current_Status.LCD_BRIGHTNESS_CHANGED = 1;
+				}
+				else if(RxData[1] == 0x08)
+				{
+					Current_Status.LCD_BRIGHTNESS = Current_Status.LCD_BRIGHTNESS == 0 ? Current_Status.LCD_BRIGHTNESS : Current_Status.LCD_BRIGHTNESS - 50;
+					Current_Status.LCD_BRIGHTNESS_CHANGED = 1;
+				}
+				else if(RxData[1] == 0x04)
+				{
+					Current_Status.LCD_BRIGHTNESS = 1000;
+					Current_Status.LCD_BRIGHTNESS_CHANGED = 1;
+				}
+				else if(RxData[1] == 0x01)
+				{
+					setWS2812Brightness(100);
+				}
+				else if(RxData[0] == 0x80)
+				{
+					setWS2812Brightness(10);
+				}
+				else if(RxData[0] == 0x20)
+				{
+					setWS2812Brightness(0);
+				}
+				else if(RxData[0] == 0x40)
+				{
+					setWS2812Brightness(1);
+				}
 				else
 				{
 					Current_Status.SCREEN_CONTAINERS[0].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
 					Current_Status.SCREEN_CONTAINERS[1].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
 					Current_Status.SCREEN_CONTAINERS[2].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
 				}
+
 			}
 			Update_RPM_Ranges();
 		}
@@ -2506,7 +2538,7 @@ void Start_START_Task(void *argument) {
 		Current_Status.CAN1_ACTIVE = false;
 		Current_Status.CAN2_ACTIVE = false;
 
-		osDelay(1000);
+		osDelay(100);
 	}
 
 	/* USER CODE END 5 */
@@ -2538,7 +2570,7 @@ __weak void TouchGFX_Task(void *argument) {
 void Start_RGB_Task(void *argument) {
 	/* USER CODE BEGIN Start_RGB_Task */
 
-	setWS2812Brightness(10);
+	setWS2812Brightness(1);
 	/* Infinite loop */
 	for (;;) {
 		if (Current_Status.RGB_ENABLED == 1) {
