@@ -2145,11 +2145,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 				}
 				else if(RxData[0] == 0x80)
 				{
-					setWS2812Brightness(10);
+					setWS2812Brightness(50);
 				}
 				else if(RxData[0] == 0x20)
 				{
-					setWS2812Brightness(0);
+					setWS2812Brightness(25);
 				}
 				else if(RxData[0] == 0x40)
 				{
@@ -2472,6 +2472,34 @@ void SetScreen(void) {
 	Current_Status.SCREEN_FIELDS_CHANGED = 1;
 }
 
+void initGrayHillKeypad(void) {
+
+	//INIT Grayhill Keypad
+
+	CAN_TxHeaderTypeDef   TxHeader;
+	uint8_t               TxData[8];
+	uint32_t              TxMailbox;
+
+	TxHeader.IDE = CAN_ID_STD;
+	TxHeader.RTR = CAN_RTR_DATA;
+	TxHeader.DLC = 8;
+
+	TxHeader.StdId = 0x000;
+	uint8_t initData[] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	HAL_CAN_AddTxMessage(&hcan1, &TxHeader, initData, &TxMailbox);
+
+	TxHeader.StdId = 0x20A;
+	uint8_t ledData[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	HAL_CAN_AddTxMessage(&hcan1, &TxHeader, ledData, &TxMailbox);
+
+	TxHeader.StdId = 0x30A;
+	uint8_t setupData[] = { 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	HAL_CAN_AddTxMessage(&hcan1, &TxHeader, setupData, &TxMailbox);
+
+
+
+}
+
 void initAll(void) {
 
 	Current_Status.LCD_BRIGHTNESS = LCD_DEFAULT_BRIGHTNESS;
@@ -2492,6 +2520,11 @@ void initAll(void) {
 
 	HAL_GPIO_WritePin(CAN1_SEL0_GPIO_Port, CAN1_SEL0_Pin, SET);
 	HAL_GPIO_WritePin(CAN2_SEL0_GPIO_Port, CAN2_SEL0_Pin, SET);
+
+
+	//INIT Grayhill Keypad
+
+	initGrayHillKeypad();
 
 }
 
@@ -2570,7 +2603,7 @@ __weak void TouchGFX_Task(void *argument) {
 void Start_RGB_Task(void *argument) {
 	/* USER CODE BEGIN Start_RGB_Task */
 
-	setWS2812Brightness(1);
+	setWS2812Brightness(25);
 	/* Infinite loop */
 	for (;;) {
 		if (Current_Status.RGB_ENABLED == 1) {
@@ -2635,7 +2668,7 @@ void Start_RGB_Task(void *argument) {
 			}
 
 			updateWS2812();
-			osDelay(100);
+			osDelay(50);
 		}
 	}
 	/* USER CODE END Start_RGB_Task */

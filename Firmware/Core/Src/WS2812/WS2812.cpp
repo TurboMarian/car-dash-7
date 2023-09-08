@@ -8,6 +8,8 @@
 
 #include "WS2812.hpp"
 
+#include <cmath>
+
 
 static WS2812_RGB_t WS2812_LED_BUF[WS2812_LED_N];
 static uint32_t WS2812_TIM_BUF[WS2812_BUFLEN];
@@ -27,7 +29,7 @@ void initWS2812()
 	ConfigureDMA();
 	ConfigureTimerChannel();
 
-	HAL_TIM_PWM_Start_DMA(&WS2812_PWM_DRIVER, WS2812_PWM_TIM_CH, (uint32_t *)WS2812_TIM_BUF, WS2812_BUFLEN);
+	HAL_TIM_PWM_Start_DMA(&WS2812_PWM_DRIVER, WS2812_PWM_TIM_CH, (uint32_t *)WS2812_TIM_BUF, WS2812_BUFLEN + 48);
 }
 
 /**
@@ -91,16 +93,16 @@ void updateWS2812()
 {
     while(!WS2812_DMA_READY);
 
-    uint32_t pos = WS2812_INVERT_ORDER ? (WS2812_LED_N * 24) : 0;
+    uint32_t pos = WS2812_INVERT_ORDER ? WS2812_BUFLEN / 2 : 0;
+	float brightness = WS2812_BRIGHTNESS / 100.0f;
 
 	for (uint32_t num = 0; num < WS2812_LED_N; num++)
 	{
 		WS2812_RGB_t led = WS2812_LED_BUF[num];
-		float brightness = WS2812_BRIGHTNESS / 100.0;
 
-		led.red = (uint8_t)(led.red * brightness);
-		led.green = (uint8_t)(led.green * brightness);
-		led.blue = (uint8_t)(led.blue * brightness);
+		led.red = led.red != 0 ? (uint8_t)(led.red * brightness) : led.red;
+		led.green = led.green != 0 ? (uint8_t)(led.green * brightness) : led.green;
+		led.blue = led.blue != 0 ? (uint8_t)(led.blue * brightness) : led.blue;
 
 		if(WS2812_INVERT_ORDER)
 		{
@@ -135,6 +137,7 @@ void updateWS2812()
 			WS2812_TIM_BUF[pos--] = ((led.red & 0x01) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
 
 		} else {
+
 			// Col:Red , Bit:7..0
 			WS2812_TIM_BUF[pos++] = ((led.red & 0x80) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
 			WS2812_TIM_BUF[pos++] = ((led.red & 0x40) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
@@ -167,8 +170,12 @@ void updateWS2812()
 			WS2812_TIM_BUF[pos++] = ((led.blue & 0x01) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
 		}
 	}
-	HAL_TIM_PWM_Start_DMA(&WS2812_PWM_DRIVER, WS2812_PWM_TIM_CH, (uint32_t *)WS2812_TIM_BUF, WS2812_BUFLEN);
-	WS2812_DMA_READY = false;
+	//
+	HAL_TIM_PWM_Stop_DMA(&WS2812_PWM_DRIVER, WS2812_PWM_TIM_CH);
+	if (HAL_TIM_PWM_Start_DMA(&WS2812_PWM_DRIVER, WS2812_PWM_TIM_CH, (uint32_t *)WS2812_TIM_BUF, WS2812_BUFLEN + 48) == HAL_OK)
+	{
+		WS2812_DMA_READY = false;
+	}
 }
 
 void ConfigureTimerPeripheral()
@@ -275,6 +282,7 @@ void ConfigureDMA(void)
 
 void DMA2_Stream1_IRQHandler(void)
 {
-	WS2812_DMA_READY = true;
+	if(WS2812_DMA_READY == false)
+		WS2812_DMA_READY = true;
 	HAL_DMA_IRQHandler(&WS2812_PWM_DMA);
 }
