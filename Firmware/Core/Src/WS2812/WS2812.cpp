@@ -15,7 +15,6 @@ static WS2812_RGB_t WS2812_LED_BUF[WS2812_LED_N];
 static uint32_t WS2812_TIM_BUF[WS2812_BUFLEN];
 static uint8_t WS2812_BRIGHTNESS = 5;
 static bool WS2812_INVERT_ORDER = true;
-static bool WS2812_DMA_READY = false;
 
 TIM_HandleTypeDef WS2812_PWM_DRIVER;
 DMA_HandleTypeDef WS2812_PWM_DMA;
@@ -91,8 +90,6 @@ void setWS2812Brightness(uint8_t num)
  */
 void updateWS2812()
 {
-    while(!WS2812_DMA_READY);
-
     uint32_t pos = WS2812_INVERT_ORDER ? WS2812_BUFLEN / 2 : 0;
 	float brightness = WS2812_BRIGHTNESS / 100.0f;
 
@@ -106,34 +103,35 @@ void updateWS2812()
 
 		if(WS2812_INVERT_ORDER)
 		{
+
 			// Col:Blue , Bit:7..0
-			WS2812_TIM_BUF[pos--] = ((led.blue & 0x80) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.blue & 0x40) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.blue & 0x20) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.blue & 0x10) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.blue & 0x08) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.blue & 0x04) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.blue & 0x02) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
 			WS2812_TIM_BUF[pos--] = ((led.blue & 0x01) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.blue & 0x02) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.blue & 0x04) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.blue & 0x08) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.blue & 0x10) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.blue & 0x20) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.blue & 0x40) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.blue & 0x80) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
 
 			// Col:Green , Bit:7..0
-			WS2812_TIM_BUF[pos--] = ((led.green & 0x80) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.green & 0x40) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.green & 0x20) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.green & 0x10) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.green & 0x08) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.green & 0x04) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.green & 0x02) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
 			WS2812_TIM_BUF[pos--] = ((led.green & 0x01) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.green & 0x02) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.green & 0x04) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.green & 0x08) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.green & 0x10) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.green & 0x20) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.green & 0x40) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.green & 0x80) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
 
 			// Col:Red , Bit:7..0
-			WS2812_TIM_BUF[pos--] = ((led.red & 0x80) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.red & 0x40) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.red & 0x20) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.red & 0x10) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.red & 0x08) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
-			WS2812_TIM_BUF[pos--] = ((led.red & 0x04) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.red & 0x01) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
 			WS2812_TIM_BUF[pos--] = ((led.red & 0x02) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.red & 0x04) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.red & 0x08) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.red & 0x10) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.red & 0x20) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
+			WS2812_TIM_BUF[pos--] = ((led.red & 0x40) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
 			WS2812_TIM_BUF[pos--] = ((led.red & 0x01) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
 
 		} else {
@@ -169,13 +167,17 @@ void updateWS2812()
 			WS2812_TIM_BUF[pos++] = ((led.blue & 0x02) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
 			WS2812_TIM_BUF[pos++] = ((led.blue & 0x01) != 0) ? WS2812_DUTYCYCLE_1 : WS2812_DUTYCYCLE_0;
 		}
+
+
 	}
 	//
-	HAL_TIM_PWM_Stop_DMA(&WS2812_PWM_DRIVER, WS2812_PWM_TIM_CH);
-	if (HAL_TIM_PWM_Start_DMA(&WS2812_PWM_DRIVER, WS2812_PWM_TIM_CH, (uint32_t *)WS2812_TIM_BUF, WS2812_BUFLEN + 48) == HAL_OK)
+	//HAL_TIM_PWM_Stop_DMA(&WS2812_PWM_DRIVER, WS2812_PWM_TIM_CH);
+
+	if(HAL_TIM_PWM_Start_DMA(&WS2812_PWM_DRIVER, WS2812_PWM_TIM_CH, (uint32_t *)WS2812_TIM_BUF, WS2812_BUFLEN + 24) == HAL_OK)
 	{
-		WS2812_DMA_READY = false;
+		__HAL_DMA_CLEAR_FLAG(&WS2812_PWM_DRIVER, DMA_FLAG_TCIF2_6 | DMA_FLAG_HTIF2_6 | DMA_FLAG_TEIF2_6 | DMA_FLAG_DMEIF2_6 | DMA_FLAG_FEIF2_6);
 	}
+	
 }
 
 void ConfigureTimerPeripheral()
@@ -268,21 +270,23 @@ void ConfigureDMA(void)
 	WS2812_PWM_DMA.Init.Priority            = DMA_PRIORITY_LOW;
 	WS2812_PWM_DMA.Init.FIFOMode 		 	= DMA_FIFOMODE_DISABLE;
 
+
+	HAL_DMA_DeInit(&WS2812_PWM_DMA);
+
 	/* Associate the DMA handle */
-	__HAL_LINKDMA(&WS2812_PWM_DRIVER, hdma[TIM_DMA_ID_CC1], WS2812_PWM_DMA);
 //
 //	/* Initialize DMA handle */
 	HAL_DMA_Init(&WS2812_PWM_DMA);
+
+	__HAL_LINKDMA(&WS2812_PWM_DRIVER, hdma[TIM_DMA_ID_CC1], WS2812_PWM_DMA);
 //
 //	/* NVIC configuration for DMA transfer complete interrupt */
-	HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 0);
+	//HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
 //
 }
 
 void DMA2_Stream1_IRQHandler(void)
 {
-	if(WS2812_DMA_READY == false)
-		WS2812_DMA_READY = true;
 	HAL_DMA_IRQHandler(&WS2812_PWM_DMA);
 }

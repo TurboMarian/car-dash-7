@@ -54,11 +54,11 @@ extern "C" {
 	#define LCD_RES_VFP  5
 #elif defined(USE_1024x600)
 	#define LCD_RES_H  1024
-	#define LCD_RES_HS  21
+	#define LCD_RES_HS  20
 	#define LCD_RES_HBP  140
 	#define LCD_RES_HFP  160
 	#define LCD_RES_V  600
-	#define LCD_RES_VS  4
+	#define LCD_RES_VS  3
 	#define LCD_RES_VBP  12
 	#define LCD_RES_VFP  20
 #endif
