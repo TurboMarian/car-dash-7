@@ -10,11 +10,14 @@ KEEP extern const uint32_t indicesGb[] TEXT_LOCATION_FLASH_ATTRIBUTE;
 // Remap all strings
 TEXT_LOCATION_FLASH_PRAGMA
 KEEP extern const uint32_t indicesGb[] TEXT_LOCATION_FLASH_ATTRIBUTE = {
-    11, // T___SINGLEUSE_V1SI: "0"
+    11, // T_GEAR_LABEL: "Gear"
+    18, // T_GEAR: "P"
+    9,  // T___SINGLEUSE_JSL3: "<>"
+    16, // T___SINGLEUSE_V1SI: "0"
     9,  // T___SINGLEUSE_84RD: "<>"
-    11, // T___SINGLEUSE_KFQ2: "0"
+    16, // T___SINGLEUSE_KFQ2: "0"
     9,  // T___SINGLEUSE_LJY2: "<>"
-    11, // T___SINGLEUSE_UMS8: "0"
+    16, // T___SINGLEUSE_UMS8: "0"
     9,  // T___SINGLEUSE_EHAV: "<>"
     0,  // T___SINGLEUSE_ISK1: "New Text"
     9,  // T___SINGLEUSE_G0O8: "<>"
@@ -28,10 +31,10 @@ KEEP extern const uint32_t indicesGb[] TEXT_LOCATION_FLASH_ATTRIBUTE = {
     9,  // T___SINGLEUSE_60M6: "<>"
     0,  // T___SINGLEUSE_CWUB: "New Text"
     9,  // T___SINGLEUSE_DPH8: "<>"
-    11, // T___SINGLEUSE_0FVF: "0"
+    16, // T___SINGLEUSE_0FVF: "0"
     9,  // T___SINGLEUSE_UENB: "<>"
-    11, // T___SINGLEUSE_T3IR: "0"
+    16, // T___SINGLEUSE_T3IR: "0"
     9,  // T___SINGLEUSE_XBNK: "<>"
-    11, // T___SINGLEUSE_6A6Y: "0"
+    16, // T___SINGLEUSE_6A6Y: "0"
     9   // T___SINGLEUSE_UHYG: "<>"
 };

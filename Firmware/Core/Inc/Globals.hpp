@@ -16,16 +16,6 @@ extern "C" {
 #include <Def/SCREEN_Def.h>
 #include <Def/SCREEN_Def.h>
 
-
-#define LCD_ORIENTATION_LANDSCAPE 0x01
-#define LCD_DEFAULT_BRIGHTNESS	1000
-#define PROTECTION_RPM_LOW 		6500
-#define PROTECTION_RPM_HIGH 	8000
-#define PROTECTION_RPM_LED 		6
-
-#define PROTECTION_OIL_LOW 		40
-#define PROTECTION_FUEL_LOW 	40
-
 #define PSI_TO_BAR 				0.0689476f
 #define PSI_TO_KPA 				6.89476f
 #define BAR_TO_PSI 				14.5038f
@@ -71,23 +61,46 @@ typedef enum {
 	CAN_MX5
 } CANDefEnum;
 
-
-struct RGBLED {
-	uint8_t enabled;
-	int color;
-};
-
 typedef struct {
+	CANDefEnum CAN_PROTOCOL;
 
 	uint8_t CAN1_ACTIVE;
 	uint8_t CAN2_ACTIVE;
 	uint8_t CAN_ENABLED;
 	uint8_t RGB_ENABLED;
 	uint8_t RPM_SWEEP;
+	uint8_t ACTIVE_SCREEN;
 
-	uint8_t PRES_UNIT;
-	uint8_t TEMP_UNIT;
-	uint8_t SPEED_UNIT;
+	UnitDefEnum PRES_UNIT;
+	UnitDefEnum TEMP_UNIT;
+	UnitDefEnum SPEED_UNIT;
+
+	uint16_t LED_BRIGHTNESS;
+	uint8_t LED_BRIGHTNESS_CHANGED;
+
+	uint16_t LCD_BRIGHTNESS;
+	uint8_t LCD_BRIGHTNESS_CHANGED;
+
+	//BTN
+	uint8_t BTN_TOP_RIGHT;
+	uint8_t BTN_TOP_LEFT;
+	uint8_t BTN_BOTTOM_RIGHT;
+	uint8_t BTN_BOTTOM_LEFT;
+
+	CONTAINER SCREEN_CONTAINERS[SCREEN_CONTAINERS_COUNT];
+	MESSAGE_CONTAINERS SCREEN_MESSAGE_CONTAINERS[1];
+
+	uint8_t SCREEN_FIELDS_CHANGED;
+
+	uint16_t PROTECTION_RPM_LOW;
+	uint16_t PROTECTION_RPM_HIGH;
+	uint16_t PROTECTION_RPM_LED;
+	uint16_t PROTECTION_OIL_LOW;
+	uint16_t PROTECTION_FUEL_LOW;
+
+}Settings;
+
+typedef struct {
 
 	uint16_t RPM;
 	uint16_t RPM_100;
@@ -95,8 +108,6 @@ typedef struct {
 	uint16_t RPM_240;
 	uint16_t RPM_270;
 	uint16_t RPM_360;
-	uint16_t RPM_RGB;
-
 
 	uint16_t MGP;
 	uint16_t INJ_DC;
@@ -161,57 +172,6 @@ typedef struct {
 	uint16_t IND_ECT;
 	uint16_t IND_LOW;
 	uint16_t IND_RIGHT;
-
-
-	bool OK_R1;
-	bool OK_R2;
-	bool OK_R3;
-	bool OK_R4;
-
-	bool OK_L1;
-	bool OK_L2;
-	bool OK_L3;
-	bool OK_L4;
-
-	bool WARNING_R1;
-	bool WARNING_R2;
-	bool WARNING_R3;
-	bool WARNING_R4;
-
-	bool WARNING_L1;
-	bool WARNING_L2;
-	bool WARNING_L3;
-	bool WARNING_L4;
-
-	bool ALERT_R1;
-	bool ALERT_R2;
-	bool ALERT_R3;
-	bool ALERT_R4;
-
-	bool ALERT_L1;
-	bool ALERT_L2;
-	bool ALERT_L3;
-	bool ALERT_L4;
-
-
-	uint16_t LED_BRIGHTNESS;
-	uint8_t LED_BRIGHTNESS_CHANGED;
-	uint16_t LCD_BRIGHTNESS;
-	uint8_t LCD_BRIGHTNESS_CHANGED;
-	uint8_t CAN_PROTOCOL;
-
-	//BTN
-	uint8_t BTN_TOP_RIGHT;
-	uint8_t BTN_TOP_LEFT;
-	uint8_t BTN_BOTTOM_RIGHT;
-	uint8_t BTN_BOTTOM_LEFT;
-
-
-	uint8_t CELL[16];
-
-	CONTAINER SCREEN_CONTAINERS[SCREEN_CONTAINERS_COUNT];
-	MESSAGE_CONTAINERS SCREEN_MESSAGE_CONTAINERS[1];
-	uint8_t SCREEN_FIELDS_CHANGED;
 
 } Statuses;
 

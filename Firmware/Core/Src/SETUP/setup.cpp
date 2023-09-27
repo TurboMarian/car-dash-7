@@ -64,7 +64,7 @@ void Set_Container_Label(uint8_t index) {
 			{
 				if(token == 1)
 				{
-					strcpy(Current_Status.SCREEN_CONTAINERS[index].Label.Text, ptr);
+					strcpy(Dash_Settings.SCREEN_CONTAINERS[index].Label.Text, ptr);
 				}
 				token = token + 1;
 				ptr = strtok (NULL, ":");
@@ -112,7 +112,7 @@ void Set_Container_Unit(uint8_t index) {
 			{
 				if(token == 1)
 				{
-					strcpy(Current_Status.SCREEN_CONTAINERS[index].Unit.Text, ptr);
+					strcpy(Dash_Settings.SCREEN_CONTAINERS[index].Unit.Text, ptr);
 				}
 				token = token + 1;
 				ptr = strtok (NULL, ":");
@@ -161,7 +161,7 @@ void Set_Container_Value(uint8_t index) {
 			{
 				if(token == 1)
 				{
-					strcpy(Current_Status.SCREEN_CONTAINERS[index].Value.Text, ptr);
+					strcpy(Dash_Settings.SCREEN_CONTAINERS[index].Value.Text, ptr);
 				}
 				token = token + 1;
 				ptr = strtok (NULL, ":");

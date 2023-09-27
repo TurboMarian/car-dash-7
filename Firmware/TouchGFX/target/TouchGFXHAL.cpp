@@ -22,6 +22,10 @@
 
 /* USER CODE BEGIN TouchGFXHAL.cpp */
 
+//__attribute__((section(".BmpCacheSection"))) __attribute__ ((aligned (32)))
+//uint16_t cache[4*1024]; //14 MB cache
+
+
 using namespace touchgfx;
 
 void TouchGFXHAL::initialize()
@@ -33,6 +37,9 @@ void TouchGFXHAL::initialize()
     // Please note, HAL::initialize() must be called to initialize the framework.
 
     TouchGFXGeneratedHAL::initialize();
+//
+//    touchgfx::Bitmap::removeCache(); //Clear any previous cache
+//	touchgfx::Bitmap::setCache(cache, sizeof(cache));
 }
 
 /**

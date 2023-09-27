@@ -43,7 +43,6 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -75,9 +74,8 @@ I2C_HandleTypeDef hi2c2;
 
 LTDC_HandleTypeDef hltdc;
 
-SD_HandleTypeDef hsd;
-
 SPI_HandleTypeDef hspi1;
+SPI_HandleTypeDef hspi3;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
@@ -130,10 +128,20 @@ const osThreadAttr_t RGB_Task_attributes = {
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for SD_Task */
+osThreadId_t SD_TaskHandle;
+const osThreadAttr_t SD_Task_attributes = {
+  .name = "SD_Task",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
 /* USER CODE BEGIN PV */
 FMC_SDRAM_CommandTypeDef command;
 
+uint8_t initFinished = false;
+
 Statuses Current_Status;
+Settings Dash_Settings;
 
 CAN_TxHeaderTypeDef TxHeader;
 CAN_RxHeaderTypeDef RxHeader;
@@ -145,6 +153,9 @@ FILE *File;
 
 FILE *FileBuffer;
 uint8_t BufferIsSet;
+
+uint32_t BlockAddress=0x000000;
+uint32_t Offset=0x000000;
 
 /* USER CODE END PV */
 
@@ -159,7 +170,6 @@ static void MX_TIM13_Init(void);
 static void MX_CAN1_Init(void);
 static void MX_CAN2_Init(void);
 static void MX_I2C2_Init(void);
-static void MX_SDIO_SD_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
@@ -173,11 +183,13 @@ static void MX_TIM10_Init(void);
 static void MX_TIM11_Init(void);
 static void MX_TIM12_Init(void);
 static void MX_TIM14_Init(void);
+static void MX_SPI3_Init(void);
 void Start_START_Task(void *argument);
 void TouchGFX_Task(void *argument);
 void Start_LOOKUP_Task(void *argument);
 void Start_CONFIG_Task(void *argument);
 void Start_RGB_Task(void *argument);
+void Start_SD_Task(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -206,6 +218,7 @@ int main(void)
 	  //HAL_Delay(1000);
 		JumpToDFU();
 	}
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -234,8 +247,6 @@ int main(void)
   MX_CAN1_Init();
   MX_CAN2_Init();
   MX_I2C2_Init();
-  MX_SDIO_SD_Init();
-  MX_FATFS_Init();
   MX_ADC1_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
@@ -249,13 +260,12 @@ int main(void)
   MX_TIM11_Init();
   MX_TIM12_Init();
   MX_TIM14_Init();
+  MX_SPI3_Init();
+  MX_FATFS_Init();
   MX_TouchGFX_Init();
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
   /* USER CODE BEGIN 2 */
-
-	initAll();
-
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -292,6 +302,9 @@ int main(void)
 
   /* creation of RGB_Task */
   RGB_TaskHandle = osThreadNew(Start_RGB_Task, NULL, &RGB_Task_attributes);
+
+  /* creation of SD_Task */
+  SD_TaskHandle = osThreadNew(Start_SD_Task, NULL, &SD_Task_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -722,34 +735,6 @@ static void MX_LTDC_Init(void)
 }
 
 /**
-  * @brief SDIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SDIO_SD_Init(void)
-{
-
-  /* USER CODE BEGIN SDIO_Init 0 */
-
-  /* USER CODE END SDIO_Init 0 */
-
-  /* USER CODE BEGIN SDIO_Init 1 */
-
-  /* USER CODE END SDIO_Init 1 */
-  hsd.Instance = SDIO;
-  hsd.Init.ClockEdge = SDIO_CLOCK_EDGE_RISING;
-  hsd.Init.ClockBypass = SDIO_CLOCK_BYPASS_DISABLE;
-  hsd.Init.ClockPowerSave = SDIO_CLOCK_POWER_SAVE_DISABLE;
-  hsd.Init.BusWide = SDIO_BUS_WIDE_4B;
-  hsd.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
-  hsd.Init.ClockDiv = 0;
-  /* USER CODE BEGIN SDIO_Init 2 */
-
-  /* USER CODE END SDIO_Init 2 */
-
-}
-
-/**
   * @brief SPI1 Initialization Function
   * @param None
   * @retval None
@@ -771,7 +756,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
   hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -784,6 +769,44 @@ static void MX_SPI1_Init(void)
   /* USER CODE BEGIN SPI1_Init 2 */
 
   /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
+  * @brief SPI3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI3_Init(void)
+{
+
+  /* USER CODE BEGIN SPI3_Init 0 */
+
+  /* USER CODE END SPI3_Init 0 */
+
+  /* USER CODE BEGIN SPI3_Init 1 */
+
+  /* USER CODE END SPI3_Init 1 */
+  /* SPI3 parameter configuration*/
+  hspi3.Instance = SPI3;
+  hspi3.Init.Mode = SPI_MODE_MASTER;
+  hspi3.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi3.Init.NSS = SPI_NSS_SOFT;
+  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi3.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI3_Init 2 */
+
+  /* USER CODE END SPI3_Init 2 */
 
 }
 
@@ -1533,7 +1556,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LED_PI3_GPIO_Port, LED_PI3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, PUD_S0_Pin|PUD_S1_Pin|PUD_S2_Pin|PUD_E_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, SD_CS_Pin|PUD_S0_Pin|PUD_S1_Pin|PUD_S2_Pin
+                          |PUD_E_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, IN_E_Pin|IN_S0_Pin|IN_S1_Pin|IN_S2_Pin
@@ -1606,6 +1630,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_PI3_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : SD_CS_Pin */
+  GPIO_InitStruct.Pin = SD_CS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SD_CS_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : PUD_S0_Pin PUD_S1_Pin PUD_S2_Pin PUD_E_Pin */
   GPIO_InitStruct.Pin = PUD_S0_Pin|PUD_S1_Pin|PUD_S2_Pin|PUD_E_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -1664,264 +1695,264 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
 void CheckAlerts() {
 
-	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 0;
+	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 0;
 
-	if (Current_Status.RPM >= PROTECTION_RPM_HIGH) {
-		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
-		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
+	if (Current_Status.RPM >= Dash_Settings.PROTECTION_RPM_HIGH) {
+		Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
+		Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
 				(COLOR_RGB ) { 255, 0, 0 };
-		strcpy(Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text,
+		strcpy(Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Text,
 				"DANGER TO RODS");
 
-	} else if (Current_Status.RPM >= PROTECTION_RPM_LOW) {
-		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
-		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text_Color = (COLOR_RGB ) {
+	} else if (Current_Status.RPM >= Dash_Settings.PROTECTION_RPM_LOW) {
+		Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
+		Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Text_Color = (COLOR_RGB ) {
 						0, 0, 0 };
-		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
+		Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
 				(COLOR_RGB ) { 255, 255, 0 };
-		strcpy(Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text,
+		strcpy(Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Text,
 				"YOU SURE YOU WANT THIS");
 	}
 
 	if (Current_Status.ECT > 1200.0) {
-		Current_Status.SCREEN_CONTAINERS[0].Background_Color = (COLOR_RGB ) {
+		Dash_Settings.SCREEN_CONTAINERS[0].Background_Color = (COLOR_RGB ) {
 						255, 0, 0 };
-		Current_Status.SCREEN_CONTAINERS[0].Value.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[0].Value.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
-		Current_Status.SCREEN_CONTAINERS[0].Label.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[0].Label.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
-		Current_Status.SCREEN_CONTAINERS[0].Unit.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[0].Unit.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
 
-		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
-		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
+		Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
+		Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
 				(COLOR_RGB ) { 255, 0, 0 };
-		strcpy(Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text,
+		strcpy(Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Text,
 				"ENGINE COOLANT °C TOO HIGH");
 
 	} else if (Current_Status.ECT > 1050.0) {
-		Current_Status.SCREEN_CONTAINERS[0].Background_Color = (COLOR_RGB ) {
+		Dash_Settings.SCREEN_CONTAINERS[0].Background_Color = (COLOR_RGB ) {
 						255, 255, 0 };
-		Current_Status.SCREEN_CONTAINERS[0].Value.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[0].Value.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
-		Current_Status.SCREEN_CONTAINERS[0].Label.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[0].Label.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
-		Current_Status.SCREEN_CONTAINERS[0].Unit.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[0].Unit.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
 
-		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
-		Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
+		Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
+		Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
 				(COLOR_RGB ) { 255, 255, 0 };
-		strcpy(Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text,
+		strcpy(Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Text,
 				"ENGINE COOLANT °C HIGH");
 	} else {
 
-		Current_Status.SCREEN_CONTAINERS[0].Background_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[0].Background_Color = (COLOR_RGB ) { 0,
 						0, 0 };
-		Current_Status.SCREEN_CONTAINERS[0].Value.Text_Color = (COLOR_RGB ) {
+		Dash_Settings.SCREEN_CONTAINERS[0].Value.Text_Color = (COLOR_RGB ) {
 						255, 255, 255 };
-		Current_Status.SCREEN_CONTAINERS[0].Label.Text_Color = (COLOR_RGB ) {
+		Dash_Settings.SCREEN_CONTAINERS[0].Label.Text_Color = (COLOR_RGB ) {
 						255, 255, 255 };
-		Current_Status.SCREEN_CONTAINERS[0].Unit.Text_Color = (COLOR_RGB ) {
+		Dash_Settings.SCREEN_CONTAINERS[0].Unit.Text_Color = (COLOR_RGB ) {
 						255, 255, 255 };
 	}
 
 	if (Current_Status.BATT < 1100.0) {
-		Current_Status.SCREEN_CONTAINERS[5].Background_Color = (COLOR_RGB ) {
+		Dash_Settings.SCREEN_CONTAINERS[5].Background_Color = (COLOR_RGB ) {
 						255, 0, 0 };
-		Current_Status.SCREEN_CONTAINERS[5].Value.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[5].Value.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
-		Current_Status.SCREEN_CONTAINERS[5].Label.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[5].Label.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
-		Current_Status.SCREEN_CONTAINERS[5].Unit.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[5].Unit.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
 	} else if (Current_Status.BATT < 1200.0) {
-		Current_Status.SCREEN_CONTAINERS[5].Background_Color = (COLOR_RGB ) {
+		Dash_Settings.SCREEN_CONTAINERS[5].Background_Color = (COLOR_RGB ) {
 						255, 255, 0 };
-		Current_Status.SCREEN_CONTAINERS[5].Value.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[5].Value.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
-		Current_Status.SCREEN_CONTAINERS[5].Label.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[5].Label.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
-		Current_Status.SCREEN_CONTAINERS[5].Unit.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[5].Unit.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
 	}
 
 	if (Current_Status.LAMBDA1 < 900 && Current_Status.LAMBDA1 > 1100) {
-		Current_Status.SCREEN_CONTAINERS[7].Background_Color = (COLOR_RGB ) {
+		Dash_Settings.SCREEN_CONTAINERS[7].Background_Color = (COLOR_RGB ) {
 						255, 0, 0 };
-		Current_Status.SCREEN_CONTAINERS[7].Value.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[7].Value.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
-		Current_Status.SCREEN_CONTAINERS[7].Label.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[7].Label.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
-		Current_Status.SCREEN_CONTAINERS[7].Unit.Text_Color = (COLOR_RGB ) { 0,
+		Dash_Settings.SCREEN_CONTAINERS[7].Unit.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
 	} else {
-		//Current_Status.SCREEN_CONTAINERS[4].Background_Color = (COLOR_RGB ) {255, 255, 0 };
-		Current_Status.SCREEN_CONTAINERS[7].Value.Text_Color = (COLOR_RGB ) { 0,
+		//Dash_Settings.SCREEN_CONTAINERS[4].Background_Color = (COLOR_RGB ) {255, 255, 0 };
+		Dash_Settings.SCREEN_CONTAINERS[7].Value.Text_Color = (COLOR_RGB ) { 0,
 						255, 0 };
-		//Current_Status.SCREEN_CONTAINERS[4].Label.Text_Color = (COLOR_RGB ) {0, 0, 0 };
-		//Current_Status.SCREEN_CONTAINERS[4].Unit.Text_Color = (COLOR_RGB ) {0, 0, 0 };
+		//Dash_Settings.SCREEN_CONTAINERS[4].Label.Text_Color = (COLOR_RGB ) {0, 0, 0 };
+		//Dash_Settings.SCREEN_CONTAINERS[4].Unit.Text_Color = (COLOR_RGB ) {0, 0, 0 };
 	}
 }
 
 void Update_Data() {
 	for (int i = 0; i < SCREEN_CONTAINERS_COUNT; ++i) {
-		switch (Current_Status.SCREEN_CONTAINERS[i].Data.Channel) {
+		switch (Dash_Settings.SCREEN_CONTAINERS[i].Data.Channel) {
 		case CH_MGP:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.MGP;
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.MGP;
 			break;
 		case CH_INJ_DC:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.INJ_DC;
 			break;
 		case CH_INJ_DC_ST:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.INJ_DC_ST;
 			break;
 		case CH_INJ_PULSE:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.INJ_PULSE;
 			break;
 		case CH_MAF:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.MAF;
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.MAF;
 			break;
 		case CH_INJ_TIM:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.INJ_TIM;
 			break;
 		case CH_IGN_TIM:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.IGN_TIM;
 			break;
 		case CH_CAM_I_L:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.CAM_I_L;
 			break;
 		case CH_CAM_I_R:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.CAM_I_R;
 			break;
 		case CH_CAM_E_L:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.CAM_E_L;
 			break;
 		case CH_CAM_E_R:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.CAM_E_R;
 			break;
 		case CH_LAMBDA1:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.LAMBDA1;
 			break;
 		case CH_LAMBDA2:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.LAMBDA2;
 			break;
 		case CH_TRIG1_ERROR:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.TRIG1_ERROR;
 			break;
 		case CH_FAULT_CODES:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.FAULT_CODES;
 			break;
 		case CH_LF_SPEED:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.LF_SPEED;
 			break;
 		case CH_LR_SPEED:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.LR_SPEED;
 			break;
 		case CH_RF_SPEED:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.RF_SPEED;
 			break;
 		case CH_RR_SPEED:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.RR_SPEED;
 			break;
 		case CH_KNOCK1:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.KNOCK1;
 			break;
 		case CH_KNOCK2:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.KNOCK2;
 			break;
 		case CH_KNOCK3:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.KNOCK3;
 			break;
 		case CH_KNOCK4:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.KNOCK4;
 			break;
 		case CH_KNOCK5:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.KNOCK5;
 			break;
 		case CH_KNOCK6:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.KNOCK6;
 			break;
 		case CH_KNOCK7:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.KNOCK7;
 			break;
 		case CH_KNOCK8:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.KNOCK8;
 			break;
 		case CH_LIMITS:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.LIMITS;
 			break;
 		case CH_TPS:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.TPS;
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.TPS;
 			break;
 		case CH_ECT:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.ECT;
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.ECT;
 			break;
 		case CH_IAT:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.IAT;
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.IAT;
 			break;
 		case CH_ETHANOL:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.ETHANOL;
 			break;
 		case CH_MAP:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.MAP;
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.MAP;
 			break;
 		case CH_BARO:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.BARO;
 			break;
 		case CH_BATT:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.BATT;
 			break;
 		case CH_FUELP:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.FUELP;
 			break;
 		case CH_OILP:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.OILP;
 			break;
 		case CH_FUELT:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.FUELT;
 			break;
 		case CH_OILT:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.OILT;
 			break;
 		case CH_RPM:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value = Current_Status.RPM;
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.RPM;
 			break;
 		case CH_FUELL:
-			Current_Status.SCREEN_CONTAINERS[i].Data.Value =
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.FUELLEVEL;
 			break;
 		default:
@@ -1933,23 +1964,23 @@ void Update_Data() {
 
 void Update_RPM_Ranges() {
 	Current_Status.RPM_100 = mapInt(Current_Status.RPM, 0,
-	PROTECTION_RPM_HIGH, 0, 100);
+			Dash_Settings.PROTECTION_RPM_HIGH, 0, 100);
 	Current_Status.RPM_100 =
 			Current_Status.RPM_100 >= 100 ? 100 : Current_Status.RPM_100;
 	Current_Status.RPM_180 = mapInt(Current_Status.RPM, 0,
-	PROTECTION_RPM_HIGH, 0, 180);
+			Dash_Settings.PROTECTION_RPM_HIGH, 0, 180);
 	Current_Status.RPM_180 =
 			Current_Status.RPM_180 >= 180 ? 810 : Current_Status.RPM_180;
 	Current_Status.RPM_270 = mapInt(Current_Status.RPM, 0,
-	PROTECTION_RPM_HIGH, 0, 270);
+			Dash_Settings.PROTECTION_RPM_HIGH, 0, 270);
 	Current_Status.RPM_270 =
 			Current_Status.RPM_270 >= 270 ? 270 : Current_Status.RPM_270;
 	Current_Status.RPM_240 = mapInt(Current_Status.RPM, 0,
-	PROTECTION_RPM_HIGH, 0, 240);
+			Dash_Settings.PROTECTION_RPM_HIGH, 0, 240);
 	Current_Status.RPM_240 =
 			Current_Status.RPM_240 >= 240 ? 240 : Current_Status.RPM_240;
 	Current_Status.RPM_360 = mapInt(Current_Status.RPM, 0,
-	PROTECTION_RPM_HIGH, 0, 360);
+			Dash_Settings.PROTECTION_RPM_HIGH, 0, 360);
 	Current_Status.RPM_360 =
 			Current_Status.RPM_360 >= 360 ? 360 : Current_Status.RPM_360;
 
@@ -1958,16 +1989,16 @@ void Update_RPM_Ranges() {
 
 void Update_RGB() {
 
-	Current_Status.ENGINE_PROTECTION = Current_Status.RPM >= PROTECTION_RPM_HIGH ? 1 : 0;
+	Current_Status.ENGINE_PROTECTION = Current_Status.RPM >= Dash_Settings.PROTECTION_RPM_HIGH ? 1 : 0;
 
 	clearWS2812All();
 	uint8_t RPMLED = WS2812_LED_N;
 
-	uint16_t lowRange = mapInt(Current_Status.RPM, PROTECTION_RPM_LOW,
-			0, RPMLED - PROTECTION_RPM_LED, 1);
+	uint16_t lowRange = mapInt(Current_Status.RPM, Dash_Settings.PROTECTION_RPM_LOW,
+			0, RPMLED - Dash_Settings.PROTECTION_RPM_LED, 1);
 	lowRange =
-			lowRange > RPMLED - PROTECTION_RPM_LED ?
-					RPMLED - PROTECTION_RPM_LED : lowRange;
+			lowRange > RPMLED - Dash_Settings.PROTECTION_RPM_LED ?
+					RPMLED - Dash_Settings.PROTECTION_RPM_LED : lowRange;
 	lowRange = lowRange < 1 ? 1 : lowRange;
 
 	for (int i = 1; i <= lowRange; i++) {
@@ -1984,10 +2015,10 @@ void Update_RGB() {
 		setWS2812One((RPMLED - i) + (WS2812_LED_N - RPMLED), color);
 	}
 
-	if (Current_Status.RPM > PROTECTION_RPM_LOW) {
+	if (Current_Status.RPM > Dash_Settings.PROTECTION_RPM_LOW) {
 		uint16_t highRange = mapInt(Current_Status.RPM,
-		PROTECTION_RPM_HIGH, PROTECTION_RPM_LOW,
-		PROTECTION_RPM_LED, 1);
+				Dash_Settings.PROTECTION_RPM_HIGH, Dash_Settings.PROTECTION_RPM_LOW,
+				Dash_Settings.PROTECTION_RPM_LED, 1);
 		for (int i = 1; i <= highRange; i++) {
 			WS2812_RGB_t color;
 			color.red = 255;
@@ -1995,11 +2026,11 @@ void Update_RGB() {
 			color.blue = 0;
 
 			setWS2812One(
-					(PROTECTION_RPM_LED - i) + (WS2812_LED_N - RPMLED),
+					(Dash_Settings.PROTECTION_RPM_LED - i) + (WS2812_LED_N - RPMLED),
 					color);
 		}
 
-		if(Current_Status.RPM >= PROTECTION_RPM_HIGH)
+		if(Current_Status.RPM >= Dash_Settings.PROTECTION_RPM_HIGH)
 		{
 			updateWS2812();
 			osDelay(50);
@@ -2010,7 +2041,7 @@ void Update_RGB() {
 				color.blue = 0;
 
 				setWS2812One(
-						(PROTECTION_RPM_LED - i) + (WS2812_LED_N - RPMLED),
+						(Dash_Settings.PROTECTION_RPM_LED - i) + (WS2812_LED_N - RPMLED),
 						color);
 			}
 		}
@@ -2020,22 +2051,21 @@ void Update_RGB() {
 	HAL_GPIO_TogglePin(LED_PJ14_GPIO_Port, LED_PJ14_Pin);
 }
 
-
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
 	if (hcan->Instance == CAN1) {
-		Current_Status.CAN1_ACTIVE = true;
+		Dash_Settings.CAN1_ACTIVE = true;
 	}
 	if (hcan->Instance == CAN2) {
-		Current_Status.CAN2_ACTIVE = true;
+		Dash_Settings.CAN2_ACTIVE = true;
 	}
 
 	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, RxData)
 			== HAL_OK) {
-		if (Current_Status.CAN_ENABLED == 1) {
+		if (initFinished && Dash_Settings.CAN_ENABLED == 1) {
 
 			HAL_GPIO_TogglePin(LED_PJ15_GPIO_Port, LED_PJ15_Pin);
-			switch (Current_Status.CAN_PROTOCOL) {
+			switch (Dash_Settings.CAN_PROTOCOL) {
 			case CAN_LINK:
 				switch (RxHeader.StdId) {
 				case 0x7E8:
@@ -2277,7 +2307,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 				else if(RxData[0] == 0x02)
 					ResetToDFU();
 				else if(RxData[0] == 0x04)
-					Current_Status.SCREEN_CONTAINERS[1].Background_Color = (COLOR_RGB ) { 255, 0, 0 };
+					Dash_Settings.SCREEN_CONTAINERS[1].Background_Color = (COLOR_RGB ) { 255, 0, 0 };
 				else if(RxData[0] == 0x08)
 				{
 					setWS2812Brightness(2);
@@ -2300,18 +2330,18 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 				}
 				else if(RxData[1] == 0x02)
 				{
-					Current_Status.LCD_BRIGHTNESS = Current_Status.LCD_BRIGHTNESS >= 1000 ? Current_Status.LCD_BRIGHTNESS : Current_Status.LCD_BRIGHTNESS <= 200 ? Current_Status.LCD_BRIGHTNESS+50 : Current_Status.LCD_BRIGHTNESS+200;
-					Current_Status.LCD_BRIGHTNESS_CHANGED = 1;
+					Dash_Settings.LCD_BRIGHTNESS = Dash_Settings.LCD_BRIGHTNESS >= 1000 ? Dash_Settings.LCD_BRIGHTNESS : Dash_Settings.LCD_BRIGHTNESS <= 200 ? Dash_Settings.LCD_BRIGHTNESS+50 : Dash_Settings.LCD_BRIGHTNESS+200;
+					Dash_Settings.LCD_BRIGHTNESS_CHANGED = 1;
 				}
 				else if(RxData[1] == 0x08)
 				{
-					Current_Status.LCD_BRIGHTNESS = Current_Status.LCD_BRIGHTNESS <= 0 ? Current_Status.LCD_BRIGHTNESS : Current_Status.LCD_BRIGHTNESS <= 200 ? Current_Status.LCD_BRIGHTNESS-50 : Current_Status.LCD_BRIGHTNESS-200;
-					Current_Status.LCD_BRIGHTNESS_CHANGED = 1;
+					Dash_Settings.LCD_BRIGHTNESS = Dash_Settings.LCD_BRIGHTNESS <= 0 ? Dash_Settings.LCD_BRIGHTNESS : Dash_Settings.LCD_BRIGHTNESS <= 200 ? Dash_Settings.LCD_BRIGHTNESS-50 : Dash_Settings.LCD_BRIGHTNESS-200;
+					Dash_Settings.LCD_BRIGHTNESS_CHANGED = 1;
 				}
 				else if(RxData[1] == 0x04)
 				{
-					Current_Status.LCD_BRIGHTNESS = 1000;
-					Current_Status.LCD_BRIGHTNESS_CHANGED = 1;
+					Dash_Settings.LCD_BRIGHTNESS = 1000;
+					Dash_Settings.LCD_BRIGHTNESS_CHANGED = 1;
 				}
 				else if(RxData[1] == 0x01)
 				{
@@ -2319,9 +2349,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 				}
 				else
 				{
-					Current_Status.SCREEN_CONTAINERS[0].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
-					Current_Status.SCREEN_CONTAINERS[1].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
-					Current_Status.SCREEN_CONTAINERS[2].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
+					Dash_Settings.SCREEN_CONTAINERS[0].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
+					Dash_Settings.SCREEN_CONTAINERS[1].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
+					Dash_Settings.SCREEN_CONTAINERS[2].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
 				}
 
 			}
@@ -2368,302 +2398,302 @@ void SetScreen(void) {
 	//-------------------------------LEFT------------------------------------------
 	//-----------------------------------------------------------------------------
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[0].Label.Text, "ECT");
-	Current_Status.SCREEN_CONTAINERS[0].Label.X = 12;
-	Current_Status.SCREEN_CONTAINERS[0].Label.Y = 85;
-	Current_Status.SCREEN_CONTAINERS[0].Label.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[0].Label.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[0].Label.Alignment = ALIGN_LEFT;
-	Current_Status.SCREEN_CONTAINERS[0].Label.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[0].Label.Text, "ECT");
+	Dash_Settings.SCREEN_CONTAINERS[0].Label.X = 12;
+	Dash_Settings.SCREEN_CONTAINERS[0].Label.Y = 85;
+	Dash_Settings.SCREEN_CONTAINERS[0].Label.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[0].Label.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[0].Label.Alignment = ALIGN_LEFT;
+	Dash_Settings.SCREEN_CONTAINERS[0].Label.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[0].Unit.Text, "°C");
-	Current_Status.SCREEN_CONTAINERS[0].Unit.X = 150;
-	Current_Status.SCREEN_CONTAINERS[0].Unit.Y = 85;
-	Current_Status.SCREEN_CONTAINERS[0].Unit.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[0].Unit.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[0].Unit.Alignment = ALIGN_RIGHT;
-	Current_Status.SCREEN_CONTAINERS[0].Unit.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[0].Unit.Text, "°C");
+	Dash_Settings.SCREEN_CONTAINERS[0].Unit.X = 150;
+	Dash_Settings.SCREEN_CONTAINERS[0].Unit.Y = 85;
+	Dash_Settings.SCREEN_CONTAINERS[0].Unit.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[0].Unit.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[0].Unit.Alignment = ALIGN_RIGHT;
+	Dash_Settings.SCREEN_CONTAINERS[0].Unit.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[0].Value.Text, "0");
-	Current_Status.SCREEN_CONTAINERS[0].Value.X = 12;
-	Current_Status.SCREEN_CONTAINERS[0].Value.Y = -5;
-	Current_Status.SCREEN_CONTAINERS[0].Value.Width = 44;
-	Current_Status.SCREEN_CONTAINERS[0].Value.Height = 96;
-	Current_Status.SCREEN_CONTAINERS[0].Value.Alignment = ALIGN_LEFT;
-	Current_Status.SCREEN_CONTAINERS[0].Value.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[0].Value.Text, "0");
+	Dash_Settings.SCREEN_CONTAINERS[0].Value.X = 12;
+	Dash_Settings.SCREEN_CONTAINERS[0].Value.Y = -5;
+	Dash_Settings.SCREEN_CONTAINERS[0].Value.Width = 44;
+	Dash_Settings.SCREEN_CONTAINERS[0].Value.Height = 96;
+	Dash_Settings.SCREEN_CONTAINERS[0].Value.Alignment = ALIGN_LEFT;
+	Dash_Settings.SCREEN_CONTAINERS[0].Value.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	Current_Status.SCREEN_CONTAINERS[0].Data.Channel = CH_ECT;
-	Current_Status.SCREEN_CONTAINERS[0].Data.Adder = 0;
-	Current_Status.SCREEN_CONTAINERS[0].Data.Decimal = 0;
-	Current_Status.SCREEN_CONTAINERS[0].Data.Divider = 10;
-	Current_Status.SCREEN_CONTAINERS[0].Data.Default = 0;
+	Dash_Settings.SCREEN_CONTAINERS[0].Data.Channel = CH_ECT;
+	Dash_Settings.SCREEN_CONTAINERS[0].Data.Adder = 0;
+	Dash_Settings.SCREEN_CONTAINERS[0].Data.Decimal = 0;
+	Dash_Settings.SCREEN_CONTAINERS[0].Data.Divider = 10;
+	Dash_Settings.SCREEN_CONTAINERS[0].Data.Default = 0;
 
 	//-----------------------------------------------------------------------------
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[1].Label.Text, "IAT");
-	Current_Status.SCREEN_CONTAINERS[1].Label.X = 12;
-	Current_Status.SCREEN_CONTAINERS[1].Label.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[1].Label.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[1].Label.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[1].Label.Alignment = ALIGN_LEFT;
-	Current_Status.SCREEN_CONTAINERS[1].Label.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[1].Label.Text, "IAT");
+	Dash_Settings.SCREEN_CONTAINERS[1].Label.X = 12;
+	Dash_Settings.SCREEN_CONTAINERS[1].Label.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[1].Label.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[1].Label.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[1].Label.Alignment = ALIGN_LEFT;
+	Dash_Settings.SCREEN_CONTAINERS[1].Label.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[1].Unit.Text, "°C");
-	Current_Status.SCREEN_CONTAINERS[1].Unit.X = 100;
-	Current_Status.SCREEN_CONTAINERS[1].Unit.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[1].Unit.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[1].Unit.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[1].Unit.Alignment = ALIGN_RIGHT;
-	Current_Status.SCREEN_CONTAINERS[1].Unit.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[1].Unit.Text, "°C");
+	Dash_Settings.SCREEN_CONTAINERS[1].Unit.X = 100;
+	Dash_Settings.SCREEN_CONTAINERS[1].Unit.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[1].Unit.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[1].Unit.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[1].Unit.Alignment = ALIGN_RIGHT;
+	Dash_Settings.SCREEN_CONTAINERS[1].Unit.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[1].Value.Text, "0");
-	Current_Status.SCREEN_CONTAINERS[1].Value.X = 12;
-	Current_Status.SCREEN_CONTAINERS[1].Value.Y = -5;
-	Current_Status.SCREEN_CONTAINERS[1].Value.Width = 44;
-	Current_Status.SCREEN_CONTAINERS[1].Value.Height = 96;
-	Current_Status.SCREEN_CONTAINERS[1].Value.Alignment = ALIGN_LEFT;
-	Current_Status.SCREEN_CONTAINERS[1].Value.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[1].Value.Text, "0");
+	Dash_Settings.SCREEN_CONTAINERS[1].Value.X = 12;
+	Dash_Settings.SCREEN_CONTAINERS[1].Value.Y = -5;
+	Dash_Settings.SCREEN_CONTAINERS[1].Value.Width = 44;
+	Dash_Settings.SCREEN_CONTAINERS[1].Value.Height = 96;
+	Dash_Settings.SCREEN_CONTAINERS[1].Value.Alignment = ALIGN_LEFT;
+	Dash_Settings.SCREEN_CONTAINERS[1].Value.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	Current_Status.SCREEN_CONTAINERS[1].Data.Channel = CH_IAT;
-	Current_Status.SCREEN_CONTAINERS[1].Data.Adder = 0;
-	Current_Status.SCREEN_CONTAINERS[1].Data.Decimal = 0;
-	Current_Status.SCREEN_CONTAINERS[1].Data.Divider = 10;
-	Current_Status.SCREEN_CONTAINERS[1].Data.Default = 0;
+	Dash_Settings.SCREEN_CONTAINERS[1].Data.Channel = CH_IAT;
+	Dash_Settings.SCREEN_CONTAINERS[1].Data.Adder = 0;
+	Dash_Settings.SCREEN_CONTAINERS[1].Data.Decimal = 0;
+	Dash_Settings.SCREEN_CONTAINERS[1].Data.Divider = 10;
+	Dash_Settings.SCREEN_CONTAINERS[1].Data.Default = 0;
 
 	//-----------------------------------------------------------------------------
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[2].Label.Text, "OIL Press");
-	Current_Status.SCREEN_CONTAINERS[2].Label.X = 12;
-	Current_Status.SCREEN_CONTAINERS[2].Label.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[2].Label.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[2].Label.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[2].Label.Alignment = ALIGN_LEFT;
-	Current_Status.SCREEN_CONTAINERS[2].Label.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[2].Label.Text, "OIL Press");
+	Dash_Settings.SCREEN_CONTAINERS[2].Label.X = 12;
+	Dash_Settings.SCREEN_CONTAINERS[2].Label.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[2].Label.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[2].Label.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[2].Label.Alignment = ALIGN_LEFT;
+	Dash_Settings.SCREEN_CONTAINERS[2].Label.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[2].Unit.Text, "kPa");
-	Current_Status.SCREEN_CONTAINERS[2].Unit.X = 120;
-	Current_Status.SCREEN_CONTAINERS[2].Unit.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[2].Unit.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[2].Unit.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[2].Unit.Alignment = ALIGN_RIGHT;
-	Current_Status.SCREEN_CONTAINERS[2].Unit.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[2].Unit.Text, "kPa");
+	Dash_Settings.SCREEN_CONTAINERS[2].Unit.X = 120;
+	Dash_Settings.SCREEN_CONTAINERS[2].Unit.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[2].Unit.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[2].Unit.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[2].Unit.Alignment = ALIGN_RIGHT;
+	Dash_Settings.SCREEN_CONTAINERS[2].Unit.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[2].Value.Text, "0");
-	Current_Status.SCREEN_CONTAINERS[2].Value.X = 12;
-	Current_Status.SCREEN_CONTAINERS[2].Value.Y = -5;
-	Current_Status.SCREEN_CONTAINERS[2].Value.Width = 44;
-	Current_Status.SCREEN_CONTAINERS[2].Value.Height = 96;
-	Current_Status.SCREEN_CONTAINERS[2].Value.Alignment = ALIGN_LEFT;
-	Current_Status.SCREEN_CONTAINERS[2].Value.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[2].Value.Text, "0");
+	Dash_Settings.SCREEN_CONTAINERS[2].Value.X = 12;
+	Dash_Settings.SCREEN_CONTAINERS[2].Value.Y = -5;
+	Dash_Settings.SCREEN_CONTAINERS[2].Value.Width = 44;
+	Dash_Settings.SCREEN_CONTAINERS[2].Value.Height = 96;
+	Dash_Settings.SCREEN_CONTAINERS[2].Value.Alignment = ALIGN_LEFT;
+	Dash_Settings.SCREEN_CONTAINERS[2].Value.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	Current_Status.SCREEN_CONTAINERS[2].Data.Channel = CH_OILP;
-	Current_Status.SCREEN_CONTAINERS[2].Data.Adder = 0;
-	Current_Status.SCREEN_CONTAINERS[2].Data.Decimal = 0;
-	Current_Status.SCREEN_CONTAINERS[2].Data.Divider = 10;
-	Current_Status.SCREEN_CONTAINERS[2].Data.Default = 0;
+	Dash_Settings.SCREEN_CONTAINERS[2].Data.Channel = CH_OILP;
+	Dash_Settings.SCREEN_CONTAINERS[2].Data.Adder = 0;
+	Dash_Settings.SCREEN_CONTAINERS[2].Data.Decimal = 0;
+	Dash_Settings.SCREEN_CONTAINERS[2].Data.Divider = 10;
+	Dash_Settings.SCREEN_CONTAINERS[2].Data.Default = 0;
 
 	//-----------------------------------------------------------------------------
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[3].Label.Text, "FUEL Press");
-	Current_Status.SCREEN_CONTAINERS[3].Label.X = 12;
-	Current_Status.SCREEN_CONTAINERS[3].Label.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[3].Label.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[3].Label.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[3].Label.Alignment = ALIGN_LEFT;
-	Current_Status.SCREEN_CONTAINERS[3].Label.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[3].Label.Text, "FUEL Press");
+	Dash_Settings.SCREEN_CONTAINERS[3].Label.X = 12;
+	Dash_Settings.SCREEN_CONTAINERS[3].Label.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[3].Label.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[3].Label.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[3].Label.Alignment = ALIGN_LEFT;
+	Dash_Settings.SCREEN_CONTAINERS[3].Label.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[3].Unit.Text, "kPa");
-	Current_Status.SCREEN_CONTAINERS[3].Unit.X = 250;
-	Current_Status.SCREEN_CONTAINERS[3].Unit.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[3].Unit.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[3].Unit.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[3].Unit.Alignment = ALIGN_RIGHT;
-	Current_Status.SCREEN_CONTAINERS[3].Unit.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[3].Unit.Text, "kPa");
+	Dash_Settings.SCREEN_CONTAINERS[3].Unit.X = 250;
+	Dash_Settings.SCREEN_CONTAINERS[3].Unit.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[3].Unit.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[3].Unit.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[3].Unit.Alignment = ALIGN_RIGHT;
+	Dash_Settings.SCREEN_CONTAINERS[3].Unit.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[3].Value.Text, "0");
-	Current_Status.SCREEN_CONTAINERS[3].Value.X = 12;
-	Current_Status.SCREEN_CONTAINERS[3].Value.Y = -5;
-	Current_Status.SCREEN_CONTAINERS[3].Value.Width = 44;
-	Current_Status.SCREEN_CONTAINERS[3].Value.Height = 96;
-	Current_Status.SCREEN_CONTAINERS[3].Value.Alignment = ALIGN_LEFT;
-	Current_Status.SCREEN_CONTAINERS[3].Value.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[3].Value.Text, "0");
+	Dash_Settings.SCREEN_CONTAINERS[3].Value.X = 12;
+	Dash_Settings.SCREEN_CONTAINERS[3].Value.Y = -5;
+	Dash_Settings.SCREEN_CONTAINERS[3].Value.Width = 44;
+	Dash_Settings.SCREEN_CONTAINERS[3].Value.Height = 96;
+	Dash_Settings.SCREEN_CONTAINERS[3].Value.Alignment = ALIGN_LEFT;
+	Dash_Settings.SCREEN_CONTAINERS[3].Value.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	Current_Status.SCREEN_CONTAINERS[3].Data.Channel = CH_FUELP;
-	Current_Status.SCREEN_CONTAINERS[3].Data.Adder = 0;
-	Current_Status.SCREEN_CONTAINERS[3].Data.Decimal = 0;
-	Current_Status.SCREEN_CONTAINERS[3].Data.Divider = 10;
-	Current_Status.SCREEN_CONTAINERS[3].Data.Default = 0;
+	Dash_Settings.SCREEN_CONTAINERS[3].Data.Channel = CH_FUELP;
+	Dash_Settings.SCREEN_CONTAINERS[3].Data.Adder = 0;
+	Dash_Settings.SCREEN_CONTAINERS[3].Data.Decimal = 0;
+	Dash_Settings.SCREEN_CONTAINERS[3].Data.Divider = 10;
+	Dash_Settings.SCREEN_CONTAINERS[3].Data.Default = 0;
 
 	//-----------------------------------------------------------------------------
 	//-------------------------------RIGHT-----------------------------------------
 	//-----------------------------------------------------------------------------
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[4].Label.Text, "MAP");
-	Current_Status.SCREEN_CONTAINERS[4].Label.X = 315;
-	Current_Status.SCREEN_CONTAINERS[4].Label.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[4].Label.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[4].Label.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[4].Label.Alignment = ALIGN_RIGHT;
-	Current_Status.SCREEN_CONTAINERS[4].Label.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[4].Label.Text, "MAP");
+	Dash_Settings.SCREEN_CONTAINERS[4].Label.X = 315;
+	Dash_Settings.SCREEN_CONTAINERS[4].Label.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[4].Label.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[4].Label.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[4].Label.Alignment = ALIGN_RIGHT;
+	Dash_Settings.SCREEN_CONTAINERS[4].Label.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[4].Unit.Text, "kPa");
-	Current_Status.SCREEN_CONTAINERS[4].Unit.X = 210;
-	Current_Status.SCREEN_CONTAINERS[4].Unit.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[4].Unit.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[4].Unit.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[4].Unit.Alignment = ALIGN_LEFT;
-	Current_Status.SCREEN_CONTAINERS[4].Unit.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[4].Unit.Text, "kPa");
+	Dash_Settings.SCREEN_CONTAINERS[4].Unit.X = 210;
+	Dash_Settings.SCREEN_CONTAINERS[4].Unit.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[4].Unit.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[4].Unit.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[4].Unit.Alignment = ALIGN_LEFT;
+	Dash_Settings.SCREEN_CONTAINERS[4].Unit.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[4].Value.Text, "0");
-	Current_Status.SCREEN_CONTAINERS[4].Value.X = 370;
-	Current_Status.SCREEN_CONTAINERS[4].Value.Y = -5;
-	Current_Status.SCREEN_CONTAINERS[4].Value.Width = 44;
-	Current_Status.SCREEN_CONTAINERS[4].Value.Height = 96;
-	Current_Status.SCREEN_CONTAINERS[4].Value.Alignment = ALIGN_RIGHT;
-	Current_Status.SCREEN_CONTAINERS[4].Value.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[4].Value.Text, "0");
+	Dash_Settings.SCREEN_CONTAINERS[4].Value.X = 370;
+	Dash_Settings.SCREEN_CONTAINERS[4].Value.Y = -5;
+	Dash_Settings.SCREEN_CONTAINERS[4].Value.Width = 44;
+	Dash_Settings.SCREEN_CONTAINERS[4].Value.Height = 96;
+	Dash_Settings.SCREEN_CONTAINERS[4].Value.Alignment = ALIGN_RIGHT;
+	Dash_Settings.SCREEN_CONTAINERS[4].Value.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	Current_Status.SCREEN_CONTAINERS[4].Data.Channel = CH_MAP;
-	Current_Status.SCREEN_CONTAINERS[4].Data.Adder = 0;
-	Current_Status.SCREEN_CONTAINERS[4].Data.Decimal = 0;
-	Current_Status.SCREEN_CONTAINERS[4].Data.Divider = 10;
-	Current_Status.SCREEN_CONTAINERS[4].Data.Default = 0;
+	Dash_Settings.SCREEN_CONTAINERS[4].Data.Channel = CH_MAP;
+	Dash_Settings.SCREEN_CONTAINERS[4].Data.Adder = 0;
+	Dash_Settings.SCREEN_CONTAINERS[4].Data.Decimal = 0;
+	Dash_Settings.SCREEN_CONTAINERS[4].Data.Divider = 10;
+	Dash_Settings.SCREEN_CONTAINERS[4].Data.Default = 0;
 
 	//-----------------------------------------------------------------------------
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[5].Label.Text, "Battery");
-	Current_Status.SCREEN_CONTAINERS[5].Label.X = 315;
-	Current_Status.SCREEN_CONTAINERS[5].Label.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[5].Label.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[5].Label.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[5].Label.Alignment = ALIGN_RIGHT;
-	Current_Status.SCREEN_CONTAINERS[5].Label.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[5].Label.Text, "Battery");
+	Dash_Settings.SCREEN_CONTAINERS[5].Label.X = 315;
+	Dash_Settings.SCREEN_CONTAINERS[5].Label.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[5].Label.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[5].Label.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[5].Label.Alignment = ALIGN_RIGHT;
+	Dash_Settings.SCREEN_CONTAINERS[5].Label.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[5].Unit.Text, "V");
-	Current_Status.SCREEN_CONTAINERS[5].Unit.X = 260;
-	Current_Status.SCREEN_CONTAINERS[5].Unit.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[5].Unit.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[5].Unit.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[5].Unit.Alignment = ALIGN_LEFT;
-	Current_Status.SCREEN_CONTAINERS[5].Unit.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[5].Unit.Text, "V");
+	Dash_Settings.SCREEN_CONTAINERS[5].Unit.X = 260;
+	Dash_Settings.SCREEN_CONTAINERS[5].Unit.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[5].Unit.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[5].Unit.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[5].Unit.Alignment = ALIGN_LEFT;
+	Dash_Settings.SCREEN_CONTAINERS[5].Unit.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[5].Value.Text, "0");
-	Current_Status.SCREEN_CONTAINERS[5].Value.X = 370;
-	Current_Status.SCREEN_CONTAINERS[5].Value.Y = -5;
-	Current_Status.SCREEN_CONTAINERS[5].Value.Width = 44;
-	Current_Status.SCREEN_CONTAINERS[5].Value.Height = 96;
-	Current_Status.SCREEN_CONTAINERS[5].Value.Alignment = ALIGN_RIGHT;
-	Current_Status.SCREEN_CONTAINERS[5].Value.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[5].Value.Text, "0");
+	Dash_Settings.SCREEN_CONTAINERS[5].Value.X = 370;
+	Dash_Settings.SCREEN_CONTAINERS[5].Value.Y = -5;
+	Dash_Settings.SCREEN_CONTAINERS[5].Value.Width = 44;
+	Dash_Settings.SCREEN_CONTAINERS[5].Value.Height = 96;
+	Dash_Settings.SCREEN_CONTAINERS[5].Value.Alignment = ALIGN_RIGHT;
+	Dash_Settings.SCREEN_CONTAINERS[5].Value.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	Current_Status.SCREEN_CONTAINERS[5].Data.Channel = CH_BATT;
-	Current_Status.SCREEN_CONTAINERS[5].Data.Adder = 0;
-	Current_Status.SCREEN_CONTAINERS[5].Data.Decimal = 1;
-	Current_Status.SCREEN_CONTAINERS[5].Data.Divider = 100;
-	Current_Status.SCREEN_CONTAINERS[5].Data.Default = 0;
+	Dash_Settings.SCREEN_CONTAINERS[5].Data.Channel = CH_BATT;
+	Dash_Settings.SCREEN_CONTAINERS[5].Data.Adder = 0;
+	Dash_Settings.SCREEN_CONTAINERS[5].Data.Decimal = 1;
+	Dash_Settings.SCREEN_CONTAINERS[5].Data.Divider = 100;
+	Dash_Settings.SCREEN_CONTAINERS[5].Data.Default = 0;
 
 	//-----------------------------------------------------------------------------
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[6].Label.Text, "TPS");
-	Current_Status.SCREEN_CONTAINERS[6].Label.X = 315;
-	Current_Status.SCREEN_CONTAINERS[6].Label.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[6].Label.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[6].Label.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[6].Label.Alignment = ALIGN_RIGHT;
-	Current_Status.SCREEN_CONTAINERS[6].Label.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[6].Label.Text, "TPS");
+	Dash_Settings.SCREEN_CONTAINERS[6].Label.X = 315;
+	Dash_Settings.SCREEN_CONTAINERS[6].Label.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[6].Label.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[6].Label.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[6].Label.Alignment = ALIGN_RIGHT;
+	Dash_Settings.SCREEN_CONTAINERS[6].Label.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[6].Unit.Text, "%");
-	Current_Status.SCREEN_CONTAINERS[6].Unit.X = 240;
-	Current_Status.SCREEN_CONTAINERS[6].Unit.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[6].Unit.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[6].Unit.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[6].Unit.Alignment = ALIGN_LEFT;
-	Current_Status.SCREEN_CONTAINERS[6].Unit.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[6].Unit.Text, "%");
+	Dash_Settings.SCREEN_CONTAINERS[6].Unit.X = 240;
+	Dash_Settings.SCREEN_CONTAINERS[6].Unit.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[6].Unit.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[6].Unit.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[6].Unit.Alignment = ALIGN_LEFT;
+	Dash_Settings.SCREEN_CONTAINERS[6].Unit.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[6].Value.Text, "0");
-	Current_Status.SCREEN_CONTAINERS[6].Value.X = 370;
-	Current_Status.SCREEN_CONTAINERS[6].Value.Y = -5;
-	Current_Status.SCREEN_CONTAINERS[6].Value.Width = 44;
-	Current_Status.SCREEN_CONTAINERS[6].Value.Height = 96;
-	Current_Status.SCREEN_CONTAINERS[6].Value.Alignment = ALIGN_RIGHT;
-	Current_Status.SCREEN_CONTAINERS[6].Value.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[6].Value.Text, "0");
+	Dash_Settings.SCREEN_CONTAINERS[6].Value.X = 370;
+	Dash_Settings.SCREEN_CONTAINERS[6].Value.Y = -5;
+	Dash_Settings.SCREEN_CONTAINERS[6].Value.Width = 44;
+	Dash_Settings.SCREEN_CONTAINERS[6].Value.Height = 96;
+	Dash_Settings.SCREEN_CONTAINERS[6].Value.Alignment = ALIGN_RIGHT;
+	Dash_Settings.SCREEN_CONTAINERS[6].Value.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	Current_Status.SCREEN_CONTAINERS[6].Data.Channel = CH_TPS;
-	Current_Status.SCREEN_CONTAINERS[6].Data.Adder = 0;
-	Current_Status.SCREEN_CONTAINERS[6].Data.Decimal = 0;
-	Current_Status.SCREEN_CONTAINERS[6].Data.Divider = 10;
-	Current_Status.SCREEN_CONTAINERS[6].Data.Default = 0;
+	Dash_Settings.SCREEN_CONTAINERS[6].Data.Channel = CH_TPS;
+	Dash_Settings.SCREEN_CONTAINERS[6].Data.Adder = 0;
+	Dash_Settings.SCREEN_CONTAINERS[6].Data.Decimal = 0;
+	Dash_Settings.SCREEN_CONTAINERS[6].Data.Divider = 10;
+	Dash_Settings.SCREEN_CONTAINERS[6].Data.Default = 0;
 
 	//-----------------------------------------------------------------------------
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[7].Label.Text, "Wideband");
-	Current_Status.SCREEN_CONTAINERS[7].Label.X = 315;
-	Current_Status.SCREEN_CONTAINERS[7].Label.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[7].Label.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[7].Label.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[7].Label.Alignment = ALIGN_RIGHT;
-	Current_Status.SCREEN_CONTAINERS[7].Label.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[7].Label.Text, "Wideband");
+	Dash_Settings.SCREEN_CONTAINERS[7].Label.X = 315;
+	Dash_Settings.SCREEN_CONTAINERS[7].Label.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[7].Label.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[7].Label.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[7].Label.Alignment = ALIGN_RIGHT;
+	Dash_Settings.SCREEN_CONTAINERS[7].Label.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[7].Unit.Text, "Lambda");
-	Current_Status.SCREEN_CONTAINERS[7].Unit.X = 115;
-	Current_Status.SCREEN_CONTAINERS[7].Unit.Y = 88;
-	Current_Status.SCREEN_CONTAINERS[7].Unit.Width = 101;
-	Current_Status.SCREEN_CONTAINERS[7].Unit.Height = 30;
-	Current_Status.SCREEN_CONTAINERS[7].Unit.Alignment = ALIGN_LEFT;
-	Current_Status.SCREEN_CONTAINERS[7].Unit.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[7].Unit.Text, "Lambda");
+	Dash_Settings.SCREEN_CONTAINERS[7].Unit.X = 115;
+	Dash_Settings.SCREEN_CONTAINERS[7].Unit.Y = 88;
+	Dash_Settings.SCREEN_CONTAINERS[7].Unit.Width = 101;
+	Dash_Settings.SCREEN_CONTAINERS[7].Unit.Height = 30;
+	Dash_Settings.SCREEN_CONTAINERS[7].Unit.Alignment = ALIGN_LEFT;
+	Dash_Settings.SCREEN_CONTAINERS[7].Unit.Text_Color = (COLOR_RGB ) { 255,
 					255, 255 };
 
-	strcpy(Current_Status.SCREEN_CONTAINERS[7].Value.Text, "0");
-	Current_Status.SCREEN_CONTAINERS[7].Value.X = 370;
-	Current_Status.SCREEN_CONTAINERS[7].Value.Y = -5;
-	Current_Status.SCREEN_CONTAINERS[7].Value.Width = 44;
-	Current_Status.SCREEN_CONTAINERS[7].Value.Height = 96;
-	Current_Status.SCREEN_CONTAINERS[7].Value.Alignment = ALIGN_RIGHT;
-	Current_Status.SCREEN_CONTAINERS[7].Value.Text_Color = (COLOR_RGB ) { 255,
+	strcpy(Dash_Settings.SCREEN_CONTAINERS[7].Value.Text, "0");
+	Dash_Settings.SCREEN_CONTAINERS[7].Value.X = 370;
+	Dash_Settings.SCREEN_CONTAINERS[7].Value.Y = -5;
+	Dash_Settings.SCREEN_CONTAINERS[7].Value.Width = 44;
+	Dash_Settings.SCREEN_CONTAINERS[7].Value.Height = 96;
+	Dash_Settings.SCREEN_CONTAINERS[7].Value.Alignment = ALIGN_RIGHT;
+	Dash_Settings.SCREEN_CONTAINERS[7].Value.Text_Color = (COLOR_RGB ) { 255,
 					0, 0 };
 
-	Current_Status.SCREEN_CONTAINERS[7].Data.Channel = CH_LAMBDA1;
-	Current_Status.SCREEN_CONTAINERS[7].Data.Adder = 0;
-	Current_Status.SCREEN_CONTAINERS[7].Data.Decimal = 2;
-	Current_Status.SCREEN_CONTAINERS[7].Data.Divider = 1000;
-	Current_Status.SCREEN_CONTAINERS[7].Data.Default = 0;
+	Dash_Settings.SCREEN_CONTAINERS[7].Data.Channel = CH_LAMBDA1;
+	Dash_Settings.SCREEN_CONTAINERS[7].Data.Adder = 0;
+	Dash_Settings.SCREEN_CONTAINERS[7].Data.Decimal = 2;
+	Dash_Settings.SCREEN_CONTAINERS[7].Data.Divider = 1000;
+	Dash_Settings.SCREEN_CONTAINERS[7].Data.Default = 0;
 
 	//-----------------------------------------------------------------------------
 
-	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
-	strcpy(Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text,
+	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
+	strcpy(Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Text,
 			"Test Error Message");
-	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Alignment = ALIGN_CENTER;
-	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].X = 0;
-	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Y = 8;
-	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Width = 1024;
-	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Height = 80;
-	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
+	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Alignment = ALIGN_CENTER;
+	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].X = 0;
+	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Y = 8;
+	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Width = 1024;
+	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Height = 80;
+	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
 			(COLOR_RGB ) { 255, 0, 0 };
-	Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text_Color = (COLOR_RGB ) { 0,
+	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Text_Color = (COLOR_RGB ) { 0,
 					255, 0 };
 
-	Current_Status.SCREEN_FIELDS_CHANGED = 1;
+	Dash_Settings.SCREEN_FIELDS_CHANGED = 1;
 }
 
 void initGrayHillKeypad(void) {
@@ -2696,29 +2726,39 @@ void initGrayHillKeypad(void) {
 
 void initAll(void) {
 
-	Current_Status.LCD_BRIGHTNESS = LCD_DEFAULT_BRIGHTNESS;
-	Current_Status.LCD_BRIGHTNESS_CHANGED = 1;
-	htim13.Instance->CCR1 = Current_Status.LCD_BRIGHTNESS;
+	HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1);
 
-	Current_Status.CAN_ENABLED = 0;
-	Current_Status.RGB_ENABLED = 1;
-	Current_Status.RPM_SWEEP = 1;
-	Current_Status.CAN_PROTOCOL = CAN_AIM;
-	Current_Status.PRES_UNIT = kPa;
-	Current_Status.TEMP_UNIT = C;
-	Current_Status.SPEED_UNIT = Kmh;
+	Dash_Settings.CAN_ENABLED = 0;
+	Dash_Settings.RGB_ENABLED = 1;
+	Dash_Settings.RPM_SWEEP = 1;
+	Dash_Settings.CAN_PROTOCOL = CAN_AIM;
+	Dash_Settings.PRES_UNIT = kPa;
+	Dash_Settings.TEMP_UNIT = C;
+	Dash_Settings.SPEED_UNIT = Kmh;
+
+	Dash_Settings.PROTECTION_RPM_LOW = 6500;
+	Dash_Settings.PROTECTION_RPM_HIGH = 8000;
+	Dash_Settings.PROTECTION_RPM_LED = 6;
+	Dash_Settings.PROTECTION_OIL_LOW - 40;
+	Dash_Settings.PROTECTION_FUEL_LOW = 40;
+
+	Dash_Settings.LCD_BRIGHTNESS = 1000;
+	Dash_Settings.LCD_BRIGHTNESS_CHANGED = 1;
+	htim13.Instance->CCR1 = Dash_Settings.LCD_BRIGHTNESS;
+
+	initWS2812();
 
 	SetScreen();
-	HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1);
-	initWS2812();
+
+	W25qxx_Init();
+	W25qxx_ReadBlock(&Dash_Settings, (uint32_t)BlockAddress, (uint32_t)Offset, (uint32_t)sizeof(Dash_Settings));
 
 	HAL_GPIO_WritePin(CAN1_SEL0_GPIO_Port, CAN1_SEL0_Pin, SET);
 	HAL_GPIO_WritePin(CAN2_SEL0_GPIO_Port, CAN2_SEL0_Pin, SET);
 
-
 	//INIT Grayhill Keypad
 
-	osDelay(500);
+	osDelay(100);
 	initGrayHillKeypad();
 
 }
@@ -2739,13 +2779,23 @@ void Start_START_Task(void *argument)
   /* USER CODE BEGIN 5 */
 	osDelay(250);
 
-	if (Current_Status.RPM_SWEEP == 1) {
-		for (int i = 0; i < PROTECTION_RPM_HIGH / 100; ++i) {
+	initAll();
+
+	Dash_Settings.ACTIVE_SCREEN = 0;
+
+	osDelay(2000);
+
+	Dash_Settings.ACTIVE_SCREEN = 1;
+
+	osDelay(200);
+
+	if (Dash_Settings.RPM_SWEEP == 1) {
+		for (int i = 0; i < Dash_Settings.PROTECTION_RPM_HIGH / 100; ++i) {
 			Current_Status.RPM = i * 100;
 			Update_RPM_Ranges();
 			osDelay(10);
 		}
-		for (int i = PROTECTION_RPM_HIGH / 100; i > 0; --i) {
+		for (int i = Dash_Settings.PROTECTION_RPM_HIGH / 100; i > 0; --i) {
 			Current_Status.RPM = i * 100;
 			Update_RPM_Ranges();
 			osDelay(10);
@@ -2753,19 +2803,20 @@ void Start_START_Task(void *argument)
 	}
 	Current_Status.RPM = 0;
 	Update_RPM_Ranges();
+	Dash_Settings.CAN_ENABLED = 1;
+	initFinished = true;
 
-	Current_Status.CAN_ENABLED = 1;
 	for (;;) {
-
-		if (Current_Status.LCD_BRIGHTNESS_CHANGED == 1) {
-			htim13.Instance->CCR1 = Current_Status.LCD_BRIGHTNESS;
-			Current_Status.LCD_BRIGHTNESS_CHANGED = 0;
+		while(!initFinished);
+		if (Dash_Settings.LCD_BRIGHTNESS_CHANGED == 1) {
+			htim13.Instance->CCR1 = Dash_Settings.LCD_BRIGHTNESS;
+			Dash_Settings.LCD_BRIGHTNESS_CHANGED = 0;
 		}
 
 		HAL_GPIO_TogglePin(LED_PJ12_GPIO_Port, LED_PJ12_Pin);
 
-		Current_Status.CAN1_ACTIVE = false;
-		Current_Status.CAN2_ACTIVE = false;
+		Dash_Settings.CAN1_ACTIVE = false;
+		Dash_Settings.CAN2_ACTIVE = false;
 		osDelay(100);
 	}
 
@@ -2801,11 +2852,10 @@ void Start_LOOKUP_Task(void *argument)
   /* USER CODE BEGIN Start_LOOKUP_Task */
 	/* Infinite loop */
 	for (;;) {
-
-		if (!Current_Status.CAN1_ACTIVE) {
+		while(!initFinished);
+		if (!Dash_Settings.CAN1_ACTIVE) {
 
 			Current_Status.RPM = 0;
-			Current_Status.RPM_RGB = 0;
 
 			Current_Status.MGP = 0;
 			Current_Status.INJ_DC = 0;
@@ -2856,12 +2906,12 @@ void Start_LOOKUP_Task(void *argument)
 			Update_RPM_Ranges();
 			Update_Data();
 
-			Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
-			Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text_Color =
+			Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Enabled = 1;
+			Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Text_Color =
 					(COLOR_RGB ) { 0, 0, 0 };
-			Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
+			Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
 					(COLOR_RGB ) { 255, 255, 0 };
-			strcpy(Current_Status.SCREEN_MESSAGE_CONTAINERS[0].Text,
+			strcpy(Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Text,
 					"CONNECTION LOST");
 
 		}
@@ -2881,16 +2931,10 @@ void Start_LOOKUP_Task(void *argument)
 void Start_CONFIG_Task(void *argument)
 {
   /* USER CODE BEGIN Start_CONFIG_Task */
+
 	/* Infinite loop */
 	for (;;) {
-
-
-
-
-		//CDC_Transmit_FS(buffer, sizeof(buffer));
-
-
-
+		while(!initFinished);
 		if (UART_RX_set == 1) {
 
 			uint8_t index = 0;
@@ -2924,6 +2968,16 @@ void Start_CONFIG_Task(void *argument)
 							break;
 					}
 					break;
+				case 'W'://READ
+					switch (UART_RX_buffer[1]) {
+						case 'F'://FLASH
+							initFinished = false;
+							W25qxx_EraseBlock(BlockAddress);
+							W25qxx_WriteBlock(&Dash_Settings, (uint32_t)BlockAddress, (uint32_t)Offset,(uint32_t)sizeof(Dash_Settings));
+							initFinished = true;
+							break;
+					}
+					break;
 			}
 			UART_RX_set = 0;
 		}
@@ -2945,13 +2999,46 @@ void Start_RGB_Task(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	if(Current_Status.RGB_ENABLED == 1)
+	if(Dash_Settings.RGB_ENABLED == 1)
 	{
 		Update_RGB();
 	}
     osDelay(100);
   }
   /* USER CODE END Start_RGB_Task */
+}
+
+/* USER CODE BEGIN Header_Start_SD_Task */
+/**
+* @brief Function implementing the SD_Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Start_SD_Task */
+void Start_SD_Task(void *argument)
+{
+  /* USER CODE BEGIN Start_SD_Task */
+
+
+	osDelay(1000);
+
+	FATFS FatFs; 	//Fatfs handle
+	FIL fil; 		//File handle
+	FRESULT fres; //Result after operations
+
+	//Open the file system
+	fres = f_mount(&FatFs, "", 1); //1=mount now
+	if (fres != FR_OK) {
+
+	}
+
+
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END Start_SD_Task */
 }
 
 /**

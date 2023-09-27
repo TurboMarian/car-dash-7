@@ -16,8 +16,10 @@ const uint16_t BITMAP_INDLOW_ID = 6;
 const uint16_t BITMAP_INDOIL_ID = 7;
 const uint16_t BITMAP_INDPARK_ID = 8;
 const uint16_t BITMAP_INDRIGHT_ID = 9;
-const uint16_t BITMAP_NEEDEL_ID = 10;
-const uint16_t BITMAP_RACE_DASH_FULL_ID = 11;
+const uint16_t BITMAP_LOGO_ID = 10;
+const uint16_t BITMAP_LOGO2_ID = 11;
+const uint16_t BITMAP_NEEDEL_ID = 12;
+const uint16_t BITMAP_RACE_DASH_FULL_ID = 13;
 
 namespace BitmapDatabase
 {

@@ -2,7 +2,7 @@
   "Application": {
     "Screens": [
       {
-        "Name": "Screen1",
+        "Name": "Main",
         "Components": [
           {
             "Type": "Box",
@@ -87,11 +87,57 @@
           {
             "Type": "Image",
             "Name": "image1",
-            "X": -3,
-            "Y": -9,
-            "Width": 1024,
-            "Height": 614,
+            "X": 12,
+            "Y": -2,
+            "Width": 997,
+            "Height": 605,
             "RelativeFilename": "race_dash_full.png"
+          },
+          {
+            "Type": "TextArea",
+            "Name": "gear_label",
+            "X": 700,
+            "Y": 400,
+            "Width": 53,
+            "Height": 30,
+            "TextId": "gear_label",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true
+          },
+          {
+            "Type": "TextArea",
+            "Name": "gear",
+            "X": 575,
+            "Y": 371,
+            "Width": 93,
+            "Height": 182,
+            "TextId": "__SingleUse_JSL3",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "gear",
+              "UseBuffer": true,
+              "BufferSize": 10
+            }
+          },
+          {
+            "Type": "Image",
+            "Name": "logo",
+            "X": 565,
+            "Y": 329,
+            "Width": 220,
+            "Height": 45,
+            "RelativeFilename": "logo.png"
           },
           {
             "Type": "Image",
@@ -215,10 +261,49 @@
             "Y": 520,
             "Width": 1024,
             "Height": 80,
+            "Visible": false,
             "CustomContainerDefinitionName": "message_container"
           }
         ],
         "Interactions": []
+      },
+      {
+        "Name": "Boot",
+        "Components": [
+          {
+            "Type": "Box",
+            "Name": "box1",
+            "Width": 1024,
+            "Height": 600,
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            }
+          },
+          {
+            "Type": "Image",
+            "Name": "logo",
+            "X": 102,
+            "Y": 190,
+            "Width": 821,
+            "Height": 221,
+            "RelativeFilename": "logo2.png"
+          }
+        ],
+        "Interactions": [
+          {
+            "InteractionName": "JumpFromBoot",
+            "Trigger": {
+              "Type": "TriggerPhysicalButtonClicked"
+            },
+            "Action": {
+              "Type": "ActionGotoScreen",
+              "ScreenTransitionType": "ScreenTransitionNone",
+              "ActionComponent": "Main"
+            }
+          }
+        ]
       }
     ],
     "CustomContainerDefinitions": [
@@ -242,8 +327,8 @@
             "Name": "container_unit_L",
             "X": 325,
             "Y": 84,
-            "Width": 101,
-            "Height": 31,
+            "Width": 103,
+            "Height": 30,
             "TextId": "__SingleUse_60M6",
             "TextRotation": "0",
             "Color": {
@@ -263,8 +348,8 @@
             "Name": "container_unit_R",
             "X": 325,
             "Y": 84,
-            "Width": 101,
-            "Height": 31,
+            "Width": 103,
+            "Height": 30,
             "TextId": "__SingleUse_UWT4",
             "TextRotation": "0",
             "Color": {
@@ -284,8 +369,8 @@
             "Name": "container_unit_C",
             "X": 325,
             "Y": 84,
-            "Width": 101,
-            "Height": 31,
+            "Width": 103,
+            "Height": 30,
             "TextId": "__SingleUse_G0O8",
             "TextRotation": "0",
             "Color": {
@@ -305,8 +390,8 @@
             "Name": "container_label_L",
             "X": 8,
             "Y": 84,
-            "Width": 101,
-            "Height": 31,
+            "Width": 103,
+            "Height": 30,
             "TextId": "__SingleUse_DPH8",
             "TextRotation": "0",
             "Color": {
@@ -326,8 +411,8 @@
             "Name": "container_label_R",
             "X": 8,
             "Y": 84,
-            "Width": 101,
-            "Height": 31,
+            "Width": 103,
+            "Height": 30,
             "TextId": "__SingleUse_5PQJ",
             "TextRotation": "0",
             "Color": {
@@ -347,8 +432,8 @@
             "Name": "container_label_C",
             "X": 8,
             "Y": 84,
-            "Width": 101,
-            "Height": 31,
+            "Width": 103,
+            "Height": 30,
             "TextId": "__SingleUse_V1SD",
             "TextRotation": "0",
             "Color": {
@@ -369,7 +454,7 @@
             "X": 8,
             "Y": 2,
             "Width": 44,
-            "Height": 97,
+            "Height": 96,
             "TextId": "__SingleUse_UHYG",
             "TextRotation": "0",
             "Color": {
@@ -390,7 +475,7 @@
             "X": 8,
             "Y": 2,
             "Width": 44,
-            "Height": 97,
+            "Height": 96,
             "TextId": "__SingleUse_XBNK",
             "TextRotation": "0",
             "Color": {
@@ -411,7 +496,7 @@
             "X": 8,
             "Y": 2,
             "Width": 44,
-            "Height": 97,
+            "Height": 96,
             "TextId": "__SingleUse_UENB",
             "TextRotation": "0",
             "Color": {
@@ -507,7 +592,7 @@
       "Height": 600
     },
     "SelectedColorDepth": 16,
-    "StartupScreenName": "Screen1",
+    "StartupScreenName": "Boot",
     "SelectedStartupLanguage": "GB",
     "TouchGfxPath": "../Middlewares/ST/touchgfx",
     "UIPath": ".",
@@ -553,5 +638,5 @@
     "OptionalComponents": [],
     "AdditionalFeatures": []
   },
-  "Version": "4.21.4"
+  "Version": "4.22.0"
 }

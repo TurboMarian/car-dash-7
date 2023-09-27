@@ -129,6 +129,8 @@ void Error_Handler(void);
 #define MULTISENSE_IN5_GPIO_Port GPIOC
 #define LED_PI3_Pin GPIO_PIN_3
 #define LED_PI3_GPIO_Port GPIOI
+#define SD_CS_Pin GPIO_PIN_2
+#define SD_CS_GPIO_Port GPIOD
 #define PUD_S0_Pin GPIO_PIN_3
 #define PUD_S0_GPIO_Port GPIOD
 #define PUD_S1_Pin GPIO_PIN_4
@@ -169,6 +171,7 @@ void Error_Handler(void);
 #define SPI1_FLASH_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+#define SD_SPI_HANDLE hspi3
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
