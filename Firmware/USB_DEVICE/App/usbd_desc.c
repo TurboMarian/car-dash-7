@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2022 STMicroelectronics.
+  * Copyright (c) 2023 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -64,11 +64,15 @@
 
 #define USBD_VID     1155
 #define USBD_LANGID_STRING     1033
-#define USBD_MANUFACTURER_STRING     "STMicroelectronics"
-#define USBD_PID_FS     22336
-#define USBD_PRODUCT_STRING_FS     "STM32 Virtual ComPort"
-#define USBD_CONFIGURATION_STRING_FS     "CDC Config"
-#define USBD_INTERFACE_STRING_FS     "CDC Interface"
+#define USBD_MANUFACTURER_STRING     "OPF"
+#define USBD_PID_FS     22315 //22314
+//#define USBD_PID_FS     22352
+//#define USBD_PID_FS     23332
+
+#define USBD_SERIALNUMBER_STRING_FS     "v1.0.0"
+#define USBD_PRODUCT_STRING_FS     "OPF DASH 7"
+#define USBD_CONFIGURATION_STRING_FS     "Custom HID Config"
+#define USBD_INTERFACE_STRING_FS     "Custom HID Interface"
 
 #define USB_SIZ_BOS_DESC            0x0C
 
@@ -164,8 +168,8 @@ __ALIGN_BEGIN uint8_t USBD_FS_DeviceDesc[USB_LEN_DEV_DESC] __ALIGN_END =
   0x00,                       /*bcdUSB */
 #endif /* (USBD_LPM_ENABLED == 1) */
   0x02,
-  0x02,                       /*bDeviceClass*/
-  0x02,                       /*bDeviceSubClass*/
+  0x00,                       /*bDeviceClass*/
+  0x00,                       /*bDeviceSubClass*/
   0x00,                       /*bDeviceProtocol*/
   USB_MAX_EP0_SIZE,           /*bMaxPacketSize*/
   LOBYTE(USBD_VID),           /*idVendor*/
@@ -283,13 +287,17 @@ uint8_t * USBD_FS_LangIDStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *length)
   */
 uint8_t * USBD_FS_ProductStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *length)
 {
+
+	  char product_str[64];
+	  snprintf(product_str, sizeof(product_str), "%s (%s)", USBD_PRODUCT_STRING_FS, USBD_SERIALNUMBER_STRING_FS);
+
   if(speed == 0)
   {
-    USBD_GetString((uint8_t *)USBD_PRODUCT_STRING_FS, USBD_StrDesc, length);
+    USBD_GetString((uint8_t *)product_str, USBD_StrDesc, length);
   }
   else
   {
-    USBD_GetString((uint8_t *)USBD_PRODUCT_STRING_FS, USBD_StrDesc, length);
+    USBD_GetString((uint8_t *)product_str, USBD_StrDesc, length);
   }
   return USBD_StrDesc;
 }
@@ -316,15 +324,19 @@ uint8_t * USBD_FS_ManufacturerStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *l
 uint8_t * USBD_FS_SerialStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *length)
 {
   UNUSED(speed);
-  *length = USB_SIZ_STRING_SERIAL;
+  char uuid_str[37];
 
-  /* Update the serial number string descriptor with the data from the unique
-   * ID */
-  Get_SerialNum();
-  /* USER CODE BEGIN USBD_FS_SerialStrDescriptor */
+    /* 96/128 bits available from stm32, zero pad remainder to form a V4 UUID */
+    snprintf(uuid_str, sizeof(uuid_str), "%03X-%04X-%u-%08X%08X%08X",
+    		DBGMCU->IDCODE & 0xFFFU, // DEV_ID
+			DBGMCU->IDCODE >> 16, // REV_ID
+			(uint16_t)(*(volatile uint32_t*)(FLASHSIZE_BASE)), // Flash size in kilobytes
+			*(volatile uint32_t*)(UID_BASE), // Unique ID 96 bits
+			*(volatile uint32_t*)(UID_BASE + 4U),
+			*(volatile uint32_t*)(UID_BASE + 8U));
+    USBD_GetString ((uint8_t*)uuid_str, USBD_StrDesc, length);
 
-  /* USER CODE END USBD_FS_SerialStrDescriptor */
-  return (uint8_t *) USBD_StringSerial;
+    return USBD_StrDesc;
 }
 
 /**

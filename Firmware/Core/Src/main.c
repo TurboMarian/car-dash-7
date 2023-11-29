@@ -27,7 +27,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 // #include <File_Handling.h>
-
 #include "stm32f4xx_hal_flash_ex.h"
 #include "stm32f4xx_hal_flash.h"
 #include "Globals.hpp"
@@ -136,6 +135,13 @@ const osThreadAttr_t SD_Task_attributes = {
   .priority = (osPriority_t) osPriorityLow,
 };
 /* USER CODE BEGIN PV */
+
+extern USBD_HandleTypeDef hUsbDeviceFS;
+uint8_t USB_TX_Buffer[OPF_HID_EPIN_SIZE];
+uint8_t USB_RX_Buffer[OPF_HID_EPOUT_SIZE];
+uint8_t new_data_is_received;
+
+
 FMC_SDRAM_CommandTypeDef command;
 
 uint8_t initFinished = false;
@@ -154,8 +160,8 @@ FILE *File;
 FILE *FileBuffer;
 uint8_t BufferIsSet;
 
-uint32_t BlockAddress=0x000000;
-uint32_t Offset=0x000000;
+uint32_t BlockAddress = 0x000000;
+uint32_t Offset = 0x000000;
 
 /* USER CODE END PV */
 
@@ -193,10 +199,8 @@ void Start_SD_Task(void *argument);
 
 /* USER CODE BEGIN PFP */
 
-
 uint8_t switchToBootloader __attribute__ ((section (".noinit")));
-void (*SysMemBootJump) (void);
-
+void (*SysMemBootJump)(void);
 
 /* USER CODE END PFP */
 
@@ -213,9 +217,8 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	BufferIsSet = 0;
 
-	if(switchToBootloader == 0x11)
-	{
-	  //HAL_Delay(1000);
+	if (switchToBootloader == 0x11) {
+		//HAL_Delay(1000);
 		JumpToDFU();
 	}
 
@@ -311,11 +314,12 @@ int main(void)
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
-  /* add events, ... */
+	/* add events, ... */
   /* USER CODE END RTOS_EVENTS */
 
   /* Start scheduler */
   osKernelStart();
+
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -1753,22 +1757,31 @@ void CheckAlerts() {
 						255, 255, 255 };
 		Dash_Settings.SCREEN_CONTAINERS[0].Label.Text_Color = (COLOR_RGB ) {
 						255, 255, 255 };
-		Dash_Settings.SCREEN_CONTAINERS[0].Unit.Text_Color = (COLOR_RGB ) {
-						255, 255, 255 };
+		Dash_Settings.SCREEN_CONTAINERS[0].Unit.Text_Color = (COLOR_RGB ) { 255,
+						255, 255 };
 	}
 
-	if (Current_Status.BATT < 1100.0) {
+	if (Current_Status.BATT > 1400.0) {
+		Dash_Settings.SCREEN_CONTAINERS[5].Background_Color = (COLOR_RGB ) { 0,
+						0, 0 };
+		Dash_Settings.SCREEN_CONTAINERS[5].Value.Text_Color = (COLOR_RGB ) {
+						255, 255, 255 };
+		Dash_Settings.SCREEN_CONTAINERS[5].Label.Text_Color = (COLOR_RGB ) {
+						255, 255, 255 };
+		Dash_Settings.SCREEN_CONTAINERS[5].Unit.Text_Color = (COLOR_RGB ) { 255,
+						255, 255 };
+	} else if (Current_Status.BATT > 1100.0) {
 		Dash_Settings.SCREEN_CONTAINERS[5].Background_Color = (COLOR_RGB ) {
-						255, 0, 0 };
+						255, 255, 0 };
 		Dash_Settings.SCREEN_CONTAINERS[5].Value.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
 		Dash_Settings.SCREEN_CONTAINERS[5].Label.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
 		Dash_Settings.SCREEN_CONTAINERS[5].Unit.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
-	} else if (Current_Status.BATT < 1200.0) {
+	} else {
 		Dash_Settings.SCREEN_CONTAINERS[5].Background_Color = (COLOR_RGB ) {
-						255, 255, 0 };
+						255, 0, 0 };
 		Dash_Settings.SCREEN_CONTAINERS[5].Value.Text_Color = (COLOR_RGB ) { 0,
 						0, 0 };
 		Dash_Settings.SCREEN_CONTAINERS[5].Label.Text_Color = (COLOR_RGB ) { 0,
@@ -1925,28 +1938,24 @@ void Update_Data() {
 			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.MAP;
 			break;
 		case CH_BARO:
-			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
-					Current_Status.BARO;
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.BARO;
 			break;
 		case CH_BATT:
-			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
-					Current_Status.BATT;
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.BATT;
 			break;
 		case CH_FUELP:
 			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.FUELP;
 			break;
 		case CH_OILP:
-			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
-					Current_Status.OILP;
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.OILP;
 			break;
 		case CH_FUELT:
 			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
 					Current_Status.FUELT;
 			break;
 		case CH_OILT:
-			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value =
-					Current_Status.OILT;
+			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.OILT;
 			break;
 		case CH_RPM:
 			Dash_Settings.SCREEN_CONTAINERS[i].Data.Value = Current_Status.RPM;
@@ -1989,13 +1998,15 @@ void Update_RPM_Ranges() {
 
 void Update_RGB() {
 
-	Current_Status.ENGINE_PROTECTION = Current_Status.RPM >= Dash_Settings.PROTECTION_RPM_HIGH ? 1 : 0;
+	Current_Status.ENGINE_PROTECTION =
+			Current_Status.RPM >= Dash_Settings.PROTECTION_RPM_HIGH ? 1 : 0;
 
 	clearWS2812All();
 	uint8_t RPMLED = WS2812_LED_N;
 
-	uint16_t lowRange = mapInt(Current_Status.RPM, Dash_Settings.PROTECTION_RPM_LOW,
-			0, RPMLED - Dash_Settings.PROTECTION_RPM_LED, 1);
+	uint16_t lowRange = mapInt(Current_Status.RPM,
+			Dash_Settings.PROTECTION_RPM_LOW, 0,
+			RPMLED - Dash_Settings.PROTECTION_RPM_LED, 1);
 	lowRange =
 			lowRange > RPMLED - Dash_Settings.PROTECTION_RPM_LED ?
 					RPMLED - Dash_Settings.PROTECTION_RPM_LED : lowRange;
@@ -2017,7 +2028,8 @@ void Update_RGB() {
 
 	if (Current_Status.RPM > Dash_Settings.PROTECTION_RPM_LOW) {
 		uint16_t highRange = mapInt(Current_Status.RPM,
-				Dash_Settings.PROTECTION_RPM_HIGH, Dash_Settings.PROTECTION_RPM_LOW,
+				Dash_Settings.PROTECTION_RPM_HIGH,
+				Dash_Settings.PROTECTION_RPM_LOW,
 				Dash_Settings.PROTECTION_RPM_LED, 1);
 		for (int i = 1; i <= highRange; i++) {
 			WS2812_RGB_t color;
@@ -2026,12 +2038,11 @@ void Update_RGB() {
 			color.blue = 0;
 
 			setWS2812One(
-					(Dash_Settings.PROTECTION_RPM_LED - i) + (WS2812_LED_N - RPMLED),
-					color);
+					(Dash_Settings.PROTECTION_RPM_LED - i)
+							+ (WS2812_LED_N - RPMLED), color);
 		}
 
-		if(Current_Status.RPM >= Dash_Settings.PROTECTION_RPM_HIGH)
-		{
+		if (Current_Status.RPM >= Dash_Settings.PROTECTION_RPM_HIGH) {
 			updateWS2812();
 			osDelay(50);
 			for (int i = 1; i <= highRange; i++) {
@@ -2041,8 +2052,8 @@ void Update_RGB() {
 				color.blue = 0;
 
 				setWS2812One(
-						(Dash_Settings.PROTECTION_RPM_LED - i) + (WS2812_LED_N - RPMLED),
-						color);
+						(Dash_Settings.PROTECTION_RPM_LED - i)
+								+ (WS2812_LED_N - RPMLED), color);
 			}
 		}
 	}
@@ -2298,60 +2309,52 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 				break;
 			}
 
-			if(RxHeader.StdId == 0x18A)
-			{
-				if(RxData[0] == 0x01)
-				{
+			if (RxHeader.StdId == 0x18A) {
+				if (RxData[0] == 0x01) {
 					Reset();
-				}
-				else if(RxData[0] == 0x02)
+				} else if (RxData[0] == 0x02)
 					ResetToDFU();
-				else if(RxData[0] == 0x04)
-					Dash_Settings.SCREEN_CONTAINERS[1].Background_Color = (COLOR_RGB ) { 255, 0, 0 };
-				else if(RxData[0] == 0x08)
-				{
+				else if (RxData[0] == 0x04)
+					Dash_Settings.SCREEN_CONTAINERS[1].Background_Color =
+							(COLOR_RGB ) { 255, 0, 0 };
+				else if (RxData[0] == 0x08) {
 					setWS2812Brightness(2);
-				}
-				else if(RxData[0] == 0x10)
-				{
+				} else if (RxData[0] == 0x10) {
 					setWS2812Brightness(5);
-				}
-				else if(RxData[0] == 0x20)
-				{
+				} else if (RxData[0] == 0x20) {
 					setWS2812Brightness(10);
-				}
-				else if(RxData[0] == 0x40)
-				{
+				} else if (RxData[0] == 0x40) {
 					setWS2812Brightness(25);
-				}
-				else if(RxData[0] == 0x80)
-				{
+				} else if (RxData[0] == 0x80) {
 					setWS2812Brightness(50);
-				}
-				else if(RxData[1] == 0x02)
-				{
-					Dash_Settings.LCD_BRIGHTNESS = Dash_Settings.LCD_BRIGHTNESS >= 1000 ? Dash_Settings.LCD_BRIGHTNESS : Dash_Settings.LCD_BRIGHTNESS <= 200 ? Dash_Settings.LCD_BRIGHTNESS+50 : Dash_Settings.LCD_BRIGHTNESS+200;
+				} else if (RxData[1] == 0x02) {
+					Dash_Settings.LCD_BRIGHTNESS =
+							Dash_Settings.LCD_BRIGHTNESS >= 1000 ?
+									Dash_Settings.LCD_BRIGHTNESS :
+							Dash_Settings.LCD_BRIGHTNESS <= 200 ?
+									Dash_Settings.LCD_BRIGHTNESS + 50 :
+									Dash_Settings.LCD_BRIGHTNESS + 200;
 					Dash_Settings.LCD_BRIGHTNESS_CHANGED = 1;
-				}
-				else if(RxData[1] == 0x08)
-				{
-					Dash_Settings.LCD_BRIGHTNESS = Dash_Settings.LCD_BRIGHTNESS <= 0 ? Dash_Settings.LCD_BRIGHTNESS : Dash_Settings.LCD_BRIGHTNESS <= 200 ? Dash_Settings.LCD_BRIGHTNESS-50 : Dash_Settings.LCD_BRIGHTNESS-200;
+				} else if (RxData[1] == 0x08) {
+					Dash_Settings.LCD_BRIGHTNESS =
+							Dash_Settings.LCD_BRIGHTNESS <= 0 ?
+									Dash_Settings.LCD_BRIGHTNESS :
+							Dash_Settings.LCD_BRIGHTNESS <= 200 ?
+									Dash_Settings.LCD_BRIGHTNESS - 50 :
+									Dash_Settings.LCD_BRIGHTNESS - 200;
 					Dash_Settings.LCD_BRIGHTNESS_CHANGED = 1;
-				}
-				else if(RxData[1] == 0x04)
-				{
+				} else if (RxData[1] == 0x04) {
 					Dash_Settings.LCD_BRIGHTNESS = 1000;
 					Dash_Settings.LCD_BRIGHTNESS_CHANGED = 1;
-				}
-				else if(RxData[1] == 0x01)
-				{
+				} else if (RxData[1] == 0x01) {
 					setWS2812Brightness(100);
-				}
-				else
-				{
-					Dash_Settings.SCREEN_CONTAINERS[0].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
-					Dash_Settings.SCREEN_CONTAINERS[1].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
-					Dash_Settings.SCREEN_CONTAINERS[2].Background_Color = (COLOR_RGB ) { 0, 0, 0 };
+				} else {
+					Dash_Settings.SCREEN_CONTAINERS[0].Background_Color =
+							(COLOR_RGB ) { 0, 0, 0 };
+					Dash_Settings.SCREEN_CONTAINERS[1].Background_Color =
+							(COLOR_RGB ) { 0, 0, 0 };
+					Dash_Settings.SCREEN_CONTAINERS[2].Background_Color =
+							(COLOR_RGB ) { 0, 0, 0 };
 				}
 
 			}
@@ -2360,36 +2363,33 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 	}
 }
 
-
-void Reset()
-{
+void Reset() {
 	//switchToBootloader = 0x00;
 	NVIC_SystemReset();					//Reset the system
 }
 
-void ResetToDFU()
-{
+void ResetToDFU() {
 	SYSCFG->MEMRMP = 0x01;
 	switchToBootloader = 0x11;
 	NVIC_SystemReset();					//Reset the system
 }
 
-void JumpToDFU()
-{
-	switchToBootloader = 0x00;	//Reset the variable to prevent being stuck in the bootloader (since a device reset wont change it)
+void JumpToDFU() {
+	switchToBootloader = 0x00;//Reset the variable to prevent being stuck in the bootloader (since a device reset wont change it)
 
 	HAL_RCC_DeInit();
 	HAL_DeInit();
 	SysTick->CTRL = SysTick->LOAD = SysTick->VAL = 0;
 	__HAL_SYSCFG_REMAPMEMORY_SYSTEMFLASH();
 
-	const uint32_t p = (*((uint32_t *) 0x1FFF0000));
-	__set_MSP( p );
+	const uint32_t p = (*((uint32_t*) 0x1FFF0000));
+	__set_MSP(p);
 
 	void (*SysMemBootJump)(void);
-	SysMemBootJump = (void (*)(void)) (*((uint32_t *) 0x1FFF0004));
+	SysMemBootJump = (void (*)(void)) (*((uint32_t*) 0x1FFF0004));
 	SysMemBootJump();
-	while( 1 ) {}
+	while (1) {
+	}
 }
 
 void SetScreen(void) {
@@ -2669,8 +2669,8 @@ void SetScreen(void) {
 	Dash_Settings.SCREEN_CONTAINERS[7].Value.Width = 44;
 	Dash_Settings.SCREEN_CONTAINERS[7].Value.Height = 96;
 	Dash_Settings.SCREEN_CONTAINERS[7].Value.Alignment = ALIGN_RIGHT;
-	Dash_Settings.SCREEN_CONTAINERS[7].Value.Text_Color = (COLOR_RGB ) { 255,
-					0, 0 };
+	Dash_Settings.SCREEN_CONTAINERS[7].Value.Text_Color = (COLOR_RGB ) { 255, 0,
+					0 };
 
 	Dash_Settings.SCREEN_CONTAINERS[7].Data.Channel = CH_LAMBDA1;
 	Dash_Settings.SCREEN_CONTAINERS[7].Data.Adder = 0;
@@ -2688,8 +2688,8 @@ void SetScreen(void) {
 	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Y = 8;
 	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Width = 1024;
 	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Height = 80;
-	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Background_Color =
-			(COLOR_RGB ) { 255, 0, 0 };
+	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Background_Color = (COLOR_RGB ) {
+					255, 0, 0 };
 	Dash_Settings.SCREEN_MESSAGE_CONTAINERS[0].Text_Color = (COLOR_RGB ) { 0,
 					255, 0 };
 
@@ -2700,9 +2700,9 @@ void initGrayHillKeypad(void) {
 
 	//INIT Grayhill Keypad
 
-	CAN_TxHeaderTypeDef   TxHeader;
-	uint8_t               TxData[8];
-	uint32_t              TxMailbox;
+	CAN_TxHeaderTypeDef TxHeader;
+	uint8_t TxData[8];
+	uint32_t TxMailbox;
 
 	TxHeader.IDE = CAN_ID_STD;
 	TxHeader.RTR = CAN_RTR_DATA;
@@ -2719,8 +2719,6 @@ void initGrayHillKeypad(void) {
 	TxHeader.StdId = 0x30A;
 	uint8_t setupData[] = { 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	HAL_CAN_AddTxMessage(&hcan1, &TxHeader, setupData, &TxMailbox);
-
-
 
 }
 
@@ -2750,8 +2748,9 @@ void initAll(void) {
 
 	SetScreen();
 
-	W25qxx_Init();
-	W25qxx_ReadBlock(&Dash_Settings, (uint32_t)BlockAddress, (uint32_t)Offset, (uint32_t)sizeof(Dash_Settings));
+	//W25qxx_Init();
+	//W25qxx_ReadBlock(&Dash_Settings, (uint32_t) BlockAddress, (uint32_t) Offset,
+	//		(uint32_t) sizeof(Dash_Settings));
 
 	HAL_GPIO_WritePin(CAN1_SEL0_GPIO_Port, CAN1_SEL0_Pin, SET);
 	HAL_GPIO_WritePin(CAN2_SEL0_GPIO_Port, CAN2_SEL0_Pin, SET);
@@ -2807,7 +2806,8 @@ void Start_START_Task(void *argument)
 	initFinished = true;
 
 	for (;;) {
-		while(!initFinished);
+		while (!initFinished)
+			;
 		if (Dash_Settings.LCD_BRIGHTNESS_CHANGED == 1) {
 			htim13.Instance->CCR1 = Dash_Settings.LCD_BRIGHTNESS;
 			Dash_Settings.LCD_BRIGHTNESS_CHANGED = 0;
@@ -2852,7 +2852,8 @@ void Start_LOOKUP_Task(void *argument)
   /* USER CODE BEGIN Start_LOOKUP_Task */
 	/* Infinite loop */
 	for (;;) {
-		while(!initFinished);
+		while (!initFinished)
+			;
 		if (!Dash_Settings.CAN1_ACTIVE) {
 
 			Current_Status.RPM = 0;
@@ -2931,94 +2932,135 @@ void Start_LOOKUP_Task(void *argument)
 void Start_CONFIG_Task(void *argument)
 {
   /* USER CODE BEGIN Start_CONFIG_Task */
+	/* USER CODE BEGIN Start_CONFIG_Task */
+		MX_USB_DEVICE_Init();
+		uint8_t outData = 0;
+		uint8_t USBD_CUSTOM_HID_SendReport     (USBD_HandleTypeDef  *pdev, uint8_t *report, uint16_t len);
 
-	/* Infinite loop */
-	for (;;) {
-		while(!initFinished);
-		if (UART_RX_set == 1) {
+	  /* Infinite loop */
+	  for(;;)
+	  {
+		  if (new_data_is_received == 1) {
+				uint8_t index = 0;
 
-			uint8_t index = 0;
-
-			switch (UART_RX_buffer[0]) {
-				case 'S'://SET
-					switch (UART_RX_buffer[1]) {
-						case 'C'://CONTAINER
-							index = ((uint8_t)UART_RX_buffer[2]) - 48;
-							Set_Screen_Container(index);
-							break;
+				switch (USB_RX_Buffer[0]) {
+				case 'S':	//SET
+					switch (USB_RX_Buffer[1]) {
+					case 'C':	//CONTAINER
+						index = ((uint8_t) USB_RX_Buffer[2]) - 48;
+						break;
 					}
 					break;
-				case 'R'://READ
-					switch (UART_RX_buffer[1]) {
-						case 'V'://VERSION
-							switch (UART_RX_buffer[2]) {
-								case 'H'://HARDWARE
-									{
-										uint8_t buffer[] =  "OPFD7\r\n";
-										CDC_Transmit_FS(buffer, sizeof(buffer));
-									}
-									break;
-								case 'F'://FIRMWARE
-									{
-										uint8_t buffer[] =  "Version 0.1 beta\r\n";
-										CDC_Transmit_FS(buffer, sizeof(buffer));
-									}
-									break;
+				case 'R':	//READ
+					switch (USB_RX_Buffer[1]) {
+						case 'V':	//VERSION
+							switch (USB_RX_Buffer[2]) {
+							case 'H':	//HARDWARE
+							{
+								uint8_t buffer[] = "OPF PDM14\r\n";
+								//CDC_Transmit_FS(buffer, sizeof(buffer));
 							}
-							break;
+								break;
+							case 'F':	//FIRMWARE
+							{	uint8_t buffer[] = "Version 0.1 beta\r\n";
+								//CDC_Transmit_FS(buffer, sizeof(buffer));
+							}
+								break;
+							case 'B':	//BUILD
+							{	uint8_t buffer[] = "Build 0.1224\r\n";
+								//CDC_Transmit_FS(buffer, sizeof(buffer));
+							}
+								break;
+							}
+							case 'T':	//TYPE
+							{
+								uint8_t buffer[] = "PDM14\r\n";
+								//CDC_Transmit_FS(buffer, sizeof(buffer));
+							}
+								break;
+						break;
+						case 'S':	//STATUS
+							switch (USB_RX_Buffer[2]) {
+							case 'I':	//INPUT
+							{	uint8_t buffer[] = "OPF PDM14\r\n";
+								//CDC_Transmit_FS(buffer, sizeof(buffer));
+							}
+								break;
+							case 'O':	//OUTPUT
+							{	uint8_t buffer[] = "Version 0.1 beta\r\n";
+								//CDC_Transmit_FS(buffer, sizeof(buffer));
+							}
+								break;
+							case 'M':	//MCU
+							{	uint8_t buffer[] = "Build 0.1224\r\n";
+								//CDC_Transmit_FS(buffer, sizeof(buffer));
+							}
+								break;
+							case 'C':	//CAN
+							{	uint8_t buffer[] = "Build 0.1224\r\n";
+								//CDC_Transmit_FS(buffer, sizeof(buffer));
+							}
+								break;
+							}
+						break;
 					}
 					break;
-				case 'W'://READ
-					switch (UART_RX_buffer[1]) {
-						case 'F'://FLASH
-							initFinished = false;
-							W25qxx_EraseBlock(BlockAddress);
-							W25qxx_WriteBlock(&Dash_Settings, (uint32_t)BlockAddress, (uint32_t)Offset,(uint32_t)sizeof(Dash_Settings));
-							initFinished = true;
-							break;
+				case 'W':	//WRITE
+					switch (USB_RX_Buffer[1]) {
+					case 'F':	//FLASH
+						initFinished = false;
+
+						initFinished = true;
+						break;
 					}
 					break;
+				}
+				new_data_is_received = 0;
 			}
-			UART_RX_set = 0;
-		}
-		osDelay(100);
-	}
+
+		  outData = outData > 255 ? 0 : outData + 1;
+		  //USB_TX_Buffer[0] = 0x02;
+		  for (int index = 0; index < 64; ++index) {
+			  USB_TX_Buffer[index] = outData;
+		  }
+		  USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, USB_TX_Buffer, OPF_HID_EPIN_SIZE);
+		  USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, USB_TX_Buffer, OPF_HID_EPIN_SIZE);
+		  USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, USB_TX_Buffer, OPF_HID_EPIN_SIZE);
+		  osDelay(100);
+	  }
   /* USER CODE END Start_CONFIG_Task */
 }
 
 /* USER CODE BEGIN Header_Start_RGB_Task */
 /**
-* @brief Function implementing the RGB_Task thread.
-* @param argument: Not used
-* @retval None
-*/
+ * @brief Function implementing the RGB_Task thread.
+ * @param argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_Start_RGB_Task */
 void Start_RGB_Task(void *argument)
 {
   /* USER CODE BEGIN Start_RGB_Task */
-  /* Infinite loop */
-  for(;;)
-  {
-	if(Dash_Settings.RGB_ENABLED == 1)
-	{
-		Update_RGB();
+	/* Infinite loop */
+	for (;;) {
+		if (Dash_Settings.RGB_ENABLED == 1) {
+			Update_RGB();
+		}
+		osDelay(100);
 	}
-    osDelay(100);
-  }
   /* USER CODE END Start_RGB_Task */
 }
 
 /* USER CODE BEGIN Header_Start_SD_Task */
 /**
-* @brief Function implementing the SD_Task thread.
-* @param argument: Not used
-* @retval None
-*/
+ * @brief Function implementing the SD_Task thread.
+ * @param argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_Start_SD_Task */
 void Start_SD_Task(void *argument)
 {
   /* USER CODE BEGIN Start_SD_Task */
-
 
 	osDelay(1000);
 
@@ -3032,12 +3074,10 @@ void Start_SD_Task(void *argument)
 
 	}
 
-
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+	/* Infinite loop */
+	for (;;) {
+		osDelay(1);
+	}
   /* USER CODE END Start_SD_Task */
 }
 

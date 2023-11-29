@@ -30,18 +30,22 @@ extern "C" {
 #define GPS_RX_size 			2048
 #define CAN_SETUP_ID			0x580
 
+#define OPF_HID_EPIN_SIZE		0x40U
+#define OPF_HID_EPOUT_SIZE		0x40U
+
+
 //#define USE_1280x480
 #define USE_1024x600
 
 #if defined(USE_1280x480)
 	#define LCD_RES_H  480
 	#define LCD_RES_HS  2
-	#define LCD_RES_HBP  8
-	#define LCD_RES_HFP  5
+	#define LCD_RES_HBP  2
+	#define LCD_RES_HFP  2
 	#define LCD_RES_V  1280
 	#define LCD_RES_VS  20
-	#define LCD_RES_VBP  5
-	#define LCD_RES_VFP  5
+	#define LCD_RES_VBP  40
+	#define LCD_RES_VFP  10
 #elif defined(USE_1024x600)
 	#define LCD_RES_H  1024
 	#define LCD_RES_HS  20
