@@ -134,12 +134,26 @@ const osThreadAttr_t SD_Task_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for HID_SEND_Task */
+osThreadId_t HID_SEND_TaskHandle;
+const osThreadAttr_t HID_SEND_Task_attributes = {
+  .name = "HID_SEND_Task",
+  .stack_size = 64 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for HID_RECIEVE_Tas */
+osThreadId_t HID_RECIEVE_TasHandle;
+const osThreadAttr_t HID_RECIEVE_Tas_attributes = {
+  .name = "HID_RECIEVE_Tas",
+  .stack_size = 64 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
 /* USER CODE BEGIN PV */
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
 uint8_t USB_TX_Buffer[OPF_HID_EPIN_SIZE];
 uint8_t USB_RX_Buffer[OPF_HID_EPOUT_SIZE];
-uint8_t new_data_is_received;
+uint8_t USB_RX_Ready;
 
 
 FMC_SDRAM_CommandTypeDef command;
@@ -196,6 +210,8 @@ void Start_LOOKUP_Task(void *argument);
 void Start_CONFIG_Task(void *argument);
 void Start_RGB_Task(void *argument);
 void Start_SD_Task(void *argument);
+void Start_HID_SEND_Task(void *argument);
+void Start_HID_RECIEVE_Task(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -308,6 +324,12 @@ int main(void)
 
   /* creation of SD_Task */
   SD_TaskHandle = osThreadNew(Start_SD_Task, NULL, &SD_Task_attributes);
+
+  /* creation of HID_SEND_Task */
+  HID_SEND_TaskHandle = osThreadNew(Start_HID_SEND_Task, NULL, &HID_SEND_Task_attributes);
+
+  /* creation of HID_RECIEVE_Tas */
+  HID_RECIEVE_TasHandle = osThreadNew(Start_HID_RECIEVE_Task, NULL, &HID_RECIEVE_Tas_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -527,6 +549,10 @@ static void MX_CAN2_Init(void)
   }
   /* USER CODE BEGIN CAN2_Init 2 */
 
+	if (HAL_CAN_Start(&hcan2) != HAL_OK) {
+		/* Start Error */
+		Error_Handler();
+	}
 	if (HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING)
 			!= HAL_OK) {
 		Error_Handler();
@@ -2701,7 +2727,7 @@ void initGrayHillKeypad(void) {
 	//INIT Grayhill Keypad
 
 	CAN_TxHeaderTypeDef TxHeader;
-	uint8_t TxData[8];
+	uint8_t TxData[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	uint32_t TxMailbox;
 
 	TxHeader.IDE = CAN_ID_STD;
@@ -2709,17 +2735,20 @@ void initGrayHillKeypad(void) {
 	TxHeader.DLC = 8;
 
 	TxHeader.StdId = 0x000;
-	uint8_t initData[] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	HAL_CAN_AddTxMessage(&hcan1, &TxHeader, initData, &TxMailbox);
+	TxData[0] = 0x01;
+	HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox);
+	osDelay(10);
 
 	TxHeader.StdId = 0x20A;
-	uint8_t ledData[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	HAL_CAN_AddTxMessage(&hcan1, &TxHeader, ledData, &TxMailbox);
+	TxData[0] = 0x00;
+	HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox);
+	osDelay(10);
 
 	TxHeader.StdId = 0x30A;
-	uint8_t setupData[] = { 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	HAL_CAN_AddTxMessage(&hcan1, &TxHeader, setupData, &TxMailbox);
-
+	TxData[0] = 0xFF;
+	TxData[2] = 0xFF;
+	HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox);
+	osDelay(10);
 }
 
 void initAll(void) {
@@ -2752,13 +2781,12 @@ void initAll(void) {
 	//W25qxx_ReadBlock(&Dash_Settings, (uint32_t) BlockAddress, (uint32_t) Offset,
 	//		(uint32_t) sizeof(Dash_Settings));
 
-	HAL_GPIO_WritePin(CAN1_SEL0_GPIO_Port, CAN1_SEL0_Pin, SET);
-	HAL_GPIO_WritePin(CAN2_SEL0_GPIO_Port, CAN2_SEL0_Pin, SET);
+	//HAL_GPIO_WritePin(CAN1_SEL0_GPIO_Port, CAN1_SEL0_Pin, SET);
+	//HAL_GPIO_WritePin(CAN2_SEL0_GPIO_Port, CAN2_SEL0_Pin, SET);
 
 	//INIT Grayhill Keypad
-
-	osDelay(100);
 	initGrayHillKeypad();
+
 
 }
 
@@ -2774,9 +2802,11 @@ void initAll(void) {
 void Start_START_Task(void *argument)
 {
   /* init code for USB_DEVICE */
-  MX_USB_DEVICE_Init();
-  /* USER CODE BEGIN 5 */
+	MX_USB_DEVICE_Init();
 	osDelay(250);
+	MX_USB_DEVICE_Init();
+	osDelay(250);
+  /* USER CODE BEGIN 5 */
 
 	initAll();
 
@@ -2806,14 +2836,12 @@ void Start_START_Task(void *argument)
 	initFinished = true;
 
 	for (;;) {
-		while (!initFinished)
-			;
+		while (!initFinished);
 		if (Dash_Settings.LCD_BRIGHTNESS_CHANGED == 1) {
 			htim13.Instance->CCR1 = Dash_Settings.LCD_BRIGHTNESS;
 			Dash_Settings.LCD_BRIGHTNESS_CHANGED = 0;
 		}
 
-		HAL_GPIO_TogglePin(LED_PJ12_GPIO_Port, LED_PJ12_Pin);
 
 		Dash_Settings.CAN1_ACTIVE = false;
 		Dash_Settings.CAN2_ACTIVE = false;
@@ -2933,100 +2961,86 @@ void Start_CONFIG_Task(void *argument)
 {
   /* USER CODE BEGIN Start_CONFIG_Task */
 	/* USER CODE BEGIN Start_CONFIG_Task */
-		MX_USB_DEVICE_Init();
-		uint8_t outData = 0;
-		uint8_t USBD_CUSTOM_HID_SendReport     (USBD_HandleTypeDef  *pdev, uint8_t *report, uint16_t len);
 
 	  /* Infinite loop */
 	  for(;;)
 	  {
-		  if (new_data_is_received == 1) {
-				uint8_t index = 0;
-
-				switch (USB_RX_Buffer[0]) {
-				case 'S':	//SET
-					switch (USB_RX_Buffer[1]) {
-					case 'C':	//CONTAINER
-						index = ((uint8_t) USB_RX_Buffer[2]) - 48;
-						break;
-					}
-					break;
-				case 'R':	//READ
-					switch (USB_RX_Buffer[1]) {
-						case 'V':	//VERSION
-							switch (USB_RX_Buffer[2]) {
-							case 'H':	//HARDWARE
-							{
-								uint8_t buffer[] = "OPF PDM14\r\n";
-								//CDC_Transmit_FS(buffer, sizeof(buffer));
-							}
-								break;
-							case 'F':	//FIRMWARE
-							{	uint8_t buffer[] = "Version 0.1 beta\r\n";
-								//CDC_Transmit_FS(buffer, sizeof(buffer));
-							}
-								break;
-							case 'B':	//BUILD
-							{	uint8_t buffer[] = "Build 0.1224\r\n";
-								//CDC_Transmit_FS(buffer, sizeof(buffer));
-							}
-								break;
-							}
-							case 'T':	//TYPE
-							{
-								uint8_t buffer[] = "PDM14\r\n";
-								//CDC_Transmit_FS(buffer, sizeof(buffer));
-							}
-								break;
-						break;
-						case 'S':	//STATUS
-							switch (USB_RX_Buffer[2]) {
-							case 'I':	//INPUT
-							{	uint8_t buffer[] = "OPF PDM14\r\n";
-								//CDC_Transmit_FS(buffer, sizeof(buffer));
-							}
-								break;
-							case 'O':	//OUTPUT
-							{	uint8_t buffer[] = "Version 0.1 beta\r\n";
-								//CDC_Transmit_FS(buffer, sizeof(buffer));
-							}
-								break;
-							case 'M':	//MCU
-							{	uint8_t buffer[] = "Build 0.1224\r\n";
-								//CDC_Transmit_FS(buffer, sizeof(buffer));
-							}
-								break;
-							case 'C':	//CAN
-							{	uint8_t buffer[] = "Build 0.1224\r\n";
-								//CDC_Transmit_FS(buffer, sizeof(buffer));
-							}
-								break;
-							}
-						break;
-					}
-					break;
-				case 'W':	//WRITE
-					switch (USB_RX_Buffer[1]) {
-					case 'F':	//FLASH
-						initFinished = false;
-
-						initFinished = true;
-						break;
-					}
-					break;
-				}
-				new_data_is_received = 0;
-			}
-
-		  outData = outData > 255 ? 0 : outData + 1;
-		  //USB_TX_Buffer[0] = 0x02;
-		  for (int index = 0; index < 64; ++index) {
-			  USB_TX_Buffer[index] = outData;
-		  }
-		  USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, USB_TX_Buffer, OPF_HID_EPIN_SIZE);
-		  USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, USB_TX_Buffer, OPF_HID_EPIN_SIZE);
-		  USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, USB_TX_Buffer, OPF_HID_EPIN_SIZE);
 		  osDelay(100);
+
+//			switch (USB_RX_Buffer[0]) {
+//			case 'S':	//SET
+//				switch (USB_RX_Buffer[1]) {
+//				case 'C':	//CONTAINER
+//					index = ((uint8_t) USB_RX_Buffer[2]) - 48;
+//					break;
+//				}
+//				break;
+//			case 'R':	//READ
+//				switch (USB_RX_Buffer[1]) {
+//					case 'V':	//VERSION
+//						switch (USB_RX_Buffer[2]) {
+//						case 'H':	//HARDWARE
+//						{
+//							uint8_t buffer[] = "OPF PDM14\r\n";
+//							//CDC_Transmit_FS(buffer, sizeof(buffer));
+//						}
+//							break;
+//						case 'F':	//FIRMWARE
+//						{	uint8_t buffer[] = "Version 0.1 beta\r\n";
+//							//CDC_Transmit_FS(buffer, sizeof(buffer));
+//						}
+//							break;
+//						case 'B':	//BUILD
+//						{	uint8_t buffer[] = "Build 0.1224\r\n";
+//							//CDC_Transmit_FS(buffer, sizeof(buffer));
+//						}
+//							break;
+//						}
+//						case 'T':	//TYPE
+//						{
+//							uint8_t buffer[] = "PDM14\r\n";
+//							//CDC_Transmit_FS(buffer, sizeof(buffer));
+//						}
+//							break;
+//					break;
+//					case 'S':	//STATUS
+//						switch (USB_RX_Buffer[2]) {
+//						case 'I':	//INPUT
+//						{	uint8_t buffer[] = "OPF PDM14\r\n";
+//							//CDC_Transmit_FS(buffer, sizeof(buffer));
+//						}
+//							break;
+//						case 'O':	//OUTPUT
+//						{	uint8_t buffer[] = "Version 0.1 beta\r\n";
+//							//CDC_Transmit_FS(buffer, sizeof(buffer));
+//						}
+//							break;
+//						case 'M':	//MCU
+//						{	uint8_t buffer[] = "Build 0.1224\r\n";
+//							//CDC_Transmit_FS(buffer, sizeof(buffer));
+//						}
+//							break;
+//						case 'C':	//CAN
+//						{	uint8_t buffer[] = "Build 0.1224\r\n";
+//							//CDC_Transmit_FS(buffer, sizeof(buffer));
+//						}
+//							break;
+//						}
+//					break;
+//				}
+//				break;
+//			case 'W':	//WRITE
+//				switch (USB_RX_Buffer[1]) {
+//				case 'F':	//FLASH
+//					initFinished = false;
+//
+//					initFinished = true;
+//					break;
+//				}
+//				break;
+//			}
+
+
 	  }
   /* USER CODE END Start_CONFIG_Task */
 }
@@ -3046,7 +3060,7 @@ void Start_RGB_Task(void *argument)
 		if (Dash_Settings.RGB_ENABLED == 1) {
 			Update_RGB();
 		}
-		osDelay(100);
+		osDelay(50);
 	}
   /* USER CODE END Start_RGB_Task */
 }
@@ -3079,6 +3093,68 @@ void Start_SD_Task(void *argument)
 		osDelay(1);
 	}
   /* USER CODE END Start_SD_Task */
+}
+
+/* USER CODE BEGIN Header_Start_HID_SEND_Task */
+/**
+* @brief Function implementing the HID_SEND_Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Start_HID_SEND_Task */
+void Start_HID_SEND_Task(void *argument)
+{
+  /* USER CODE BEGIN Start_HID_SEND_Task */
+
+	uint8_t outData = 0;
+	uint8_t USBD_CUSTOM_HID_SendReport(USBD_HandleTypeDef *pdev, uint8_t *report, uint16_t len);
+
+  /* Infinite loop */
+  for(;;)
+  {
+	  outData = outData > 255 ? 0 : outData + 1;
+	  USB_TX_Buffer[0] = 0x01;
+	  USB_TX_Buffer[1] = 0x08;
+
+	  for (int index = 2; index < OPF_HID_EPIN_SIZE; ++index) {
+		  USB_TX_Buffer[index] = outData;
+	  }
+	  USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, USB_TX_Buffer, OPF_HID_EPIN_SIZE);
+
+	  osDelay(100);
+  }
+  /* USER CODE END Start_HID_SEND_Task */
+}
+
+/* USER CODE BEGIN Header_Start_HID_RECIEVE_Task */
+/**
+* @brief Function implementing the HID_RECIEVE_Tas thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Start_HID_RECIEVE_Task */
+void Start_HID_RECIEVE_Task(void *argument)
+{
+  /* USER CODE BEGIN Start_HID_RECIEVE_Task */
+	USB_RX_Ready = 0;
+
+	uint8_t USBD_CUSTOM_HID_ReceivePacket(USBD_HandleTypeDef *pdev);
+	HAL_GPIO_WritePin(LED_PJ12_GPIO_Port, LED_PJ12_Pin, SET);
+	HAL_GPIO_WritePin(LED_PJ13_GPIO_Port, LED_PJ13_Pin, RESET);
+  /* Infinite loop */
+  for(;;)
+  {
+	if (USB_RX_Ready == 1) {
+		USB_RX_Ready = 0;
+		USBD_CUSTOM_HID_ReceivePacket(&hUsbDeviceFS);
+
+		HAL_GPIO_TogglePin(LED_PJ12_GPIO_Port, LED_PJ12_Pin);
+		HAL_GPIO_TogglePin(LED_PJ13_GPIO_Port, LED_PJ13_Pin);
+
+	}
+    osDelay(100);
+  }
+  /* USER CODE END Start_HID_RECIEVE_Task */
 }
 
 /**

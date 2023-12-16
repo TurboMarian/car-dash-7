@@ -92,66 +92,32 @@
 /** Usb HID report descriptor. */
 __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DESC_SIZE] __ALIGN_END =
 {
-		 /* USER CODE BEGIN 0 */
-		0x06, 0x00, 0xFF,       	// Usage Page = 0xFF00 (Vendor Defined Page 1)
-		0x09, 0x01,             	// Usage (Vendor Usage 1)
-		0xA1, 0x01,             	// Collection (Application)
-		// Input report
-		0x85, 0x02,             	//   REPORT_ID (1)
-		0x19, 0x01,             	// Usage Minimum
-		0x29, 0x40,             	// Usage Maximum
-		0x15, 0x00,             	// Logical Minimum (data bytes in the report may have minimum value = 0x00)
-		0x26, 0xFF, 0x00,       	// Logical Maximum (data bytes in the report may have maximum value = 0x00FF = unsigned 255)
-		0x75, 0x08,             	// Report Size: 8-bit field size
-		0x95, OPF_HID_EPIN_SIZE,	// Report Count
-		0x81, 0x02,             	// Input (Data, Array, Abs)
+  /* USER CODE BEGIN 0 */
+	0x06, 0x00, 0xFF,           // Usage Page = 0xFF00 (Vendor Defined Page 1)
+	0x09, 0x01,                 // Usage (Vendor Usage 1)
+	0xA1, 0x01,                 // Collection (Application)
+	// Input report
+	//0x85, 0x02,                 //   REPORT_ID (1)
+	0x19, 0x01,                 // Usage Minimum
+	0x29, 0x40,                 // Usage Maximum
+	0x15, 0x00,                 // Logical Minimum (data bytes in the report may have minimum value = 0x00)
+	0x26, 0xFF, 0x00,           // Logical Maximum (data bytes in the report may have maximum value = 0x00FF = unsigned 255)
+	0x75, 0x08,                 // Report Size: 8-bit field size
+	0x95, OPF_HID_EPIN_SIZE,    // Report Count
+	0x81, 0x02,                 // Input (Data, Array, Abs)
 
-		0x85, 0x04,             	//   REPORT_ID (1)
-		0x19, 0x01,             	// Usage Minimum
-		0x29, 0x40,             	// Usage Maximum
-		0x15, 0x00,             	// Logical Minimum (data bytes in the report may have minimum value = 0x00)
-		0x26, 0xFF, 0x00,       	// Logical Maximum (data bytes in the report may have maximum value = 0x00FF = unsigned 255)
-		0x75, 0x08,             	// Report Size: 8-bit field size
-		0x95, OPF_HID_EPIN_SIZE,	// Report Count
-		0x81, 0x02,             	// Input (Data, Array, Abs)
+	// Output report
+	//0x85, 0x02,                 //   REPORT_ID (1)
+	0x19, 0x01,                 // Usage Minimum
+	0x29, 0x40,                 // Usage Maximum
+	0x15, 0x00,                 // Logical Minimum (data bytes in the report may have minimum value = 0x00)
+	0x26, 0xFF, 0x00,           // Logical Maximum (data bytes in the report may have maximum value = 0x00FF = unsigned 255)
+	0x75, 0x08,                 // Report Size: 8-bit field size
+	0x95, OPF_HID_EPOUT_SIZE,    // Report Count
+	0x91, 0x02,                 // Output (Data, Array, Abs)
 
-		0x85, 0x06,             	//   REPORT_ID (1)
-		0x19, 0x01,             	// Usage Minimum
-		0x29, 0x40,             	// Usage Maximum
-		0x15, 0x00,             	// Logical Minimum (data bytes in the report may have minimum value = 0x00)
-		0x26, 0xFF, 0x00,       	// Logical Maximum (data bytes in the report may have maximum value = 0x00FF = unsigned 255)
-		0x75, 0x08,             	// Report Size: 8-bit field size
-		0x95, OPF_HID_EPIN_SIZE,	// Report Count
-		0x81, 0x02,             	// Input (Data, Array, Abs)
-
-		// Output report
-		0x85, 0x02,             	//   REPORT_ID (1)
-		0x19, 0x01,             	// Usage Minimum
-		0x29, 0x40,             	// Usage Maximum
-		0x15, 0x00,             	// Logical Minimum (data bytes in the report may have minimum value = 0x00)
-		0x26, 0xFF, 0x00,       	// Logical Maximum (data bytes in the report may have maximum value = 0x00FF = unsigned 255)
-		0x75, 0x08,             	// Report Size: 8-bit field size
-		0x95, OPF_HID_EPOUT_SIZE,	// Report Count
-		0x91, 0x02,             	// Output (Data, Array, Abs)
-
-		0x85, 0x04,             	//   REPORT_ID (1)
-		0x19, 0x01,             	// Usage Minimum
-		0x29, 0x40,             	// Usage Maximum
-		0x15, 0x00,             	// Logical Minimum (data bytes in the report may have minimum value = 0x00)
-		0x26, 0xFF, 0x00,       	// Logical Maximum (data bytes in the report may have maximum value = 0x00FF = unsigned 255)
-		0x75, 0x08,             	// Report Size: 8-bit field size
-		0x95, OPF_HID_EPOUT_SIZE,	// Report Count
-		0x91, 0x02,             	// Output (Data, Array, Abs)
-
-		0x85, 0x06,             	//   REPORT_ID (1)
-		0x19, 0x01,             	// Usage Minimum
-		0x29, 0x40,             	// Usage Maximum
-		0x15, 0x00,             	// Logical Minimum (data bytes in the report may have minimum value = 0x00)
-		0x26, 0xFF, 0x00,       	// Logical Maximum (data bytes in the report may have maximum value = 0x00FF = unsigned 255)
-		0x75, 0x08,             	// Report Size: 8-bit field size
-		0x95, OPF_HID_EPOUT_SIZE,	// Report Count
-		0x91, 0x02,             	// Output (Data, Array, Abs)
-		0xC0
+  /* USER CODE END 0 */
+  0xC0    /*     END_COLLECTION	             */
 };
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
@@ -234,14 +200,12 @@ static int8_t CUSTOM_HID_OutEvent_FS(uint8_t event_idx, uint8_t state)
 {
   /* USER CODE BEGIN 6 */
 	USBD_CUSTOM_HID_HandleTypeDef *hhid = (USBD_CUSTOM_HID_HandleTypeDef*) hUsbDeviceFS.pClassData;
-
-	for (uint8_t i = 0; i < OPF_HID_EPOUT_SIZE; i++) {
-		/* To read user data from PC */
+	for (uint8_t i = 0; i <OPF_HID_EPOUT_SIZE; i++) {
 		USB_RX_Buffer[i] =  hhid->Report_buf[i];
 	}
-	new_data_is_received = 1;
+	USB_RX_Ready = 1;
 
-  return (USBD_OK);
+	return (USBD_OK);
   /* USER CODE END 6 */
 }
 
