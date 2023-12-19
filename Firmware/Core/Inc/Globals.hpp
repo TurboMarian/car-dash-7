@@ -30,12 +30,12 @@ extern "C" {
 #define GPS_RX_size 			2048
 #define CAN_SETUP_ID			0x580
 
-#define OPF_HID_EPIN_SIZE		0x08U
-#define OPF_HID_EPOUT_SIZE		0x08U
+#define OPF_HID_EPIN_SIZE		0x45U
+#define OPF_HID_EPOUT_SIZE		0x45U
 
 
-//#define USE_1280x480
-#define USE_1024x600
+#define USE_1280x480
+//#define USE_1024x600
 
 #if defined(USE_1280x480)
 	#define LCD_RES_H  480

@@ -199,12 +199,13 @@ static int8_t CUSTOM_HID_DeInit_FS(void)
 static int8_t CUSTOM_HID_OutEvent_FS(uint8_t event_idx, uint8_t state)
 {
   /* USER CODE BEGIN 6 */
-	USBD_CUSTOM_HID_HandleTypeDef *hhid = (USBD_CUSTOM_HID_HandleTypeDef*) hUsbDeviceFS.pClassData;
-	for (uint8_t i = 0; i <OPF_HID_EPOUT_SIZE; i++) {
-		USB_RX_Buffer[i] =  hhid->Report_buf[i];
+	if (USB_RX_Ready == 0) {
+		USBD_CUSTOM_HID_HandleTypeDef *hhid = (USBD_CUSTOM_HID_HandleTypeDef*) hUsbDeviceFS.pClassData;
+		for (uint8_t i = 0; i <OPF_HID_EPOUT_SIZE; i++) {
+			USB_RX_Buffer[i] =  hhid->Report_buf[i];
+		}
+		USB_RX_Ready = 1;
 	}
-	USB_RX_Ready = 1;
-
 	return (USBD_OK);
   /* USER CODE END 6 */
 }
