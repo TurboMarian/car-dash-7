@@ -97,7 +97,7 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DES
 	0x09, 0x01,                 // Usage (Vendor Usage 1)
 	0xA1, 0x01,                 // Collection (Application)
 	// Input report
-	//0x85, 0x02,                 //   REPORT_ID (1)
+	//0x85, 0x01,                 //   REPORT_ID (1)
 	0x19, 0x01,                 // Usage Minimum
 	0x29, 0x40,                 // Usage Maximum
 	0x15, 0x00,                 // Logical Minimum (data bytes in the report may have minimum value = 0x00)
@@ -107,7 +107,7 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DES
 	0x81, 0x02,                 // Input (Data, Array, Abs)
 
 	// Output report
-	//0x85, 0x02,                 //   REPORT_ID (1)
+	//0x85, 0x02,                 //   REPORT_ID (2)
 	0x19, 0x01,                 // Usage Minimum
 	0x29, 0x40,                 // Usage Maximum
 	0x15, 0x00,                 // Logical Minimum (data bytes in the report may have minimum value = 0x00)

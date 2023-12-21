@@ -50,7 +50,6 @@ void MainView::tearDownScreen() {
 }
 
 void MainView::handleTickEvent() {
-	Unicode::UnicodeChar buffer[16];
 
 	if (Dash_Settings.SCREEN_FIELDS_CHANGED == true) {
 		setupScreen();
@@ -121,6 +120,22 @@ void MainView::handleTickEvent() {
 
 	indRight.setVisible(Current_Status.IND_RIGHT);
 	indRight.invalidate();
+
 	gauge1.updateValue(Current_Status.RPM, 0);
+
+
+	Unicode::UnicodeChar buffer[10];
+	Unicode::snprintfFloat(buffer, 10, "%.0f", Current_Status.RPM);
+	Unicode::snprintf(rpmBuffer, 10, "%s", buffer);
+	rpm.resizeToCurrentTextWithAlignment();
+	rpm.setVisible(true);
+	rpm.invalidate();
+
+
+	Unicode::snprintfFloat(buffer, 10, "%.0f", Current_Status.GEAR);
+	Unicode::snprintf(gearBuffer, 10, "%s", buffer);
+	gear.resizeToCurrentTextWithAlignment();
+	gear.setVisible(true);
+	gear.invalidate();
 
 }

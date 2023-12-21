@@ -1,0 +1,663 @@
+{
+  "Application": {
+    "Screens": [
+      {
+        "Name": "Main",
+        "Components": [
+          {
+            "Type": "Box",
+            "Name": "background",
+            "X": -3,
+            "Y": 1,
+            "Width": 1024,
+            "Height": 600
+          },
+          {
+            "Type": "CustomContainerInstance",
+            "Name": "container_0",
+            "X": 19,
+            "Y": 14,
+            "Width": 426,
+            "Height": 125,
+            "CustomContainerDefinitionName": "value_container"
+          },
+          {
+            "Type": "CustomContainerInstance",
+            "Name": "container_1",
+            "X": 19,
+            "Y": 162,
+            "Width": 426,
+            "Height": 125,
+            "CustomContainerDefinitionName": "value_container"
+          },
+          {
+            "Type": "CustomContainerInstance",
+            "Name": "container_2",
+            "X": 19,
+            "Y": 313,
+            "Width": 426,
+            "Height": 125,
+            "CustomContainerDefinitionName": "value_container"
+          },
+          {
+            "Type": "CustomContainerInstance",
+            "Name": "container_3",
+            "X": 19,
+            "Y": 462,
+            "Width": 426,
+            "Height": 125,
+            "CustomContainerDefinitionName": "value_container"
+          },
+          {
+            "Type": "CustomContainerInstance",
+            "Name": "container_4",
+            "X": 575,
+            "Y": 14,
+            "Width": 426,
+            "Height": 125,
+            "CustomContainerDefinitionName": "value_container"
+          },
+          {
+            "Type": "CustomContainerInstance",
+            "Name": "container_5",
+            "X": 575,
+            "Y": 162,
+            "Width": 426,
+            "Height": 125,
+            "CustomContainerDefinitionName": "value_container"
+          },
+          {
+            "Type": "CustomContainerInstance",
+            "Name": "container_6",
+            "X": 575,
+            "Y": 313,
+            "Width": 426,
+            "Height": 125,
+            "CustomContainerDefinitionName": "value_container"
+          },
+          {
+            "Type": "CustomContainerInstance",
+            "Name": "container_7",
+            "X": 575,
+            "Y": 462,
+            "Width": 426,
+            "Height": 125,
+            "CustomContainerDefinitionName": "value_container"
+          },
+          {
+            "Type": "Image",
+            "Name": "image1",
+            "X": 12,
+            "Y": -2,
+            "Width": 997,
+            "Height": 605,
+            "RelativeFilename": "race_dash_full.png"
+          },
+          {
+            "Type": "TextArea",
+            "Name": "gear_label",
+            "X": 700,
+            "Y": 400,
+            "Width": 53,
+            "Height": 30,
+            "TextId": "gear_label",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true
+          },
+          {
+            "Type": "TextArea",
+            "Name": "gear",
+            "X": 575,
+            "Y": 371,
+            "Width": 93,
+            "Height": 180,
+            "TextId": "__SingleUse_JSL3",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "gear",
+              "UseBuffer": true,
+              "BufferSize": 10
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "rpm",
+            "X": 502,
+            "Y": 176,
+            "Width": 50,
+            "Height": 96,
+            "TextId": "__SingleUse_JF06",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "gear",
+              "UseBuffer": true,
+              "BufferSize": 10
+            }
+          },
+          {
+            "Type": "Image",
+            "Name": "logo",
+            "X": 565,
+            "Y": 329,
+            "Width": 220,
+            "Height": 45,
+            "RelativeFilename": "logo.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "indLeft",
+            "X": 264,
+            "Y": 32,
+            "Width": 65,
+            "Height": 42,
+            "RelativeFilename": "indLeft.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "indRight",
+            "X": 721,
+            "Y": 32,
+            "Width": 65,
+            "Height": 42,
+            "RelativeFilename": "indRight.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "indHigh",
+            "X": 375,
+            "Y": 289,
+            "Width": 49,
+            "Height": 28,
+            "RelativeFilename": "indHigh.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "indFuel",
+            "X": 597,
+            "Y": 191,
+            "Width": 32,
+            "Height": 40,
+            "RelativeFilename": "indFuel.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "indOil",
+            "X": 385,
+            "Y": 364,
+            "Width": 67,
+            "Height": 28,
+            "RelativeFilename": "indOil.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "indBatt",
+            "X": 413,
+            "Y": 194,
+            "Width": 49,
+            "Height": 38,
+            "RelativeFilename": "indBatt.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "indPark",
+            "X": 499,
+            "Y": 155,
+            "Width": 56,
+            "Height": 41,
+            "RelativeFilename": "indPark.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "indDTC",
+            "X": 576,
+            "Y": 251,
+            "Width": 75,
+            "Height": 36,
+            "RelativeFilename": "indDTC.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "indECT",
+            "X": 449,
+            "Y": 400,
+            "Width": 45,
+            "Height": 40,
+            "RelativeFilename": "indECT.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "indLow",
+            "X": 447,
+            "Y": 290,
+            "Width": 48,
+            "Height": 30,
+            "RelativeFilename": "indLow.png"
+          },
+          {
+            "Type": "Gauge",
+            "Name": "gauge1",
+            "X": 225,
+            "Y": -1,
+            "Width": 600,
+            "Height": 600,
+            "RotationCenterX": 300.0,
+            "RotationCenterY": 300.0,
+            "EndAngle": 240.0,
+            "RangeMax": 8000.0,
+            "Easing": "Linear",
+            "EasingOption": "In",
+            "FileNameNeedle": "needel.png",
+            "NeedleRotationCenterX": 16.0,
+            "NeedleRotationCenterY": 16.0,
+            "NeedleMovingRenderingAlgorithm": "Bilinear Interpolation",
+            "NeedleSteadyRenderingAlgorithm": "Bilinear Interpolation",
+            "ArcColor": {
+              "Red": 196,
+              "Green": 22,
+              "Blue": 22
+            },
+            "ArcCapStyle": "Butt",
+            "ArcOnTopOfNeedle": true
+          },
+          {
+            "Type": "CustomContainerInstance",
+            "Name": "message_container_0",
+            "Y": 520,
+            "Width": 1024,
+            "Height": 80,
+            "Visible": false,
+            "CustomContainerDefinitionName": "message_container"
+          }
+        ],
+        "Interactions": []
+      },
+      {
+        "Name": "Boot",
+        "Components": [
+          {
+            "Type": "Box",
+            "Name": "box1",
+            "Width": 1024,
+            "Height": 600,
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            }
+          },
+          {
+            "Type": "Image",
+            "Name": "logo",
+            "X": 192,
+            "Y": 191,
+            "Width": 640,
+            "Height": 218,
+            "RelativeFilename": "logo3.png"
+          }
+        ],
+        "Interactions": [
+          {
+            "InteractionName": "JumpFromBoot",
+            "Trigger": {
+              "Type": "TriggerPhysicalButtonClicked"
+            },
+            "Action": {
+              "Type": "ActionGotoScreen",
+              "ScreenTransitionType": "ScreenTransitionNone",
+              "ActionComponent": "Main"
+            }
+          }
+        ]
+      }
+    ],
+    "CustomContainerDefinitions": [
+      {
+        "Name": "value_container",
+        "Width": 426,
+        "Height": 125,
+        "Components": [
+          {
+            "Type": "Box",
+            "Name": "container_background",
+            "Y": 1,
+            "Width": 426,
+            "Height": 123,
+            "Color": {
+              "Red": 255
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "container_unit_L",
+            "X": 325,
+            "Y": 84,
+            "Width": 103,
+            "Height": 30,
+            "TextId": "__SingleUse_60M6",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_AAWC",
+              "UseBuffer": true,
+              "BufferSize": 10
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "container_unit_R",
+            "X": 325,
+            "Y": 84,
+            "Width": 103,
+            "Height": 30,
+            "TextId": "__SingleUse_UWT4",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_XWEJ",
+              "UseBuffer": true,
+              "BufferSize": 10
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "container_unit_C",
+            "X": 325,
+            "Y": 84,
+            "Width": 103,
+            "Height": 30,
+            "TextId": "__SingleUse_G0O8",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_ISK1",
+              "UseBuffer": true,
+              "BufferSize": 10
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "container_label_L",
+            "X": 8,
+            "Y": 84,
+            "Width": 103,
+            "Height": 30,
+            "TextId": "__SingleUse_DPH8",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_CWUB",
+              "UseBuffer": true,
+              "BufferSize": 10
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "container_label_R",
+            "X": 8,
+            "Y": 84,
+            "Width": 103,
+            "Height": 30,
+            "TextId": "__SingleUse_5PQJ",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_UY0D",
+              "UseBuffer": true,
+              "BufferSize": 10
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "container_label_C",
+            "X": 8,
+            "Y": 84,
+            "Width": 103,
+            "Height": 30,
+            "TextId": "__SingleUse_V1SD",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_A1FT",
+              "UseBuffer": true,
+              "BufferSize": 10
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "container_value_L",
+            "X": 8,
+            "Y": 2,
+            "Width": 44,
+            "Height": 96,
+            "TextId": "__SingleUse_UHYG",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_6A6Y",
+              "UseBuffer": true,
+              "BufferSize": 32
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "container_value_R",
+            "X": 8,
+            "Y": 2,
+            "Width": 44,
+            "Height": 96,
+            "TextId": "__SingleUse_XBNK",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_T3IR",
+              "UseBuffer": true,
+              "BufferSize": 32
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "container_value_C",
+            "X": 8,
+            "Y": 2,
+            "Width": 44,
+            "Height": 96,
+            "TextId": "__SingleUse_UENB",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_0FVF",
+              "UseBuffer": true,
+              "BufferSize": 32
+            }
+          }
+        ],
+        "Interactions": []
+      },
+      {
+        "Name": "message_container",
+        "Width": 1024,
+        "Height": 80,
+        "Components": [
+          {
+            "Type": "Box",
+            "Name": "container_background",
+            "Width": 1024,
+            "Height": 80,
+            "Color": {
+              "Red": 255
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "container_value_L",
+            "Width": 1024,
+            "Height": 80,
+            "TextId": "__SingleUse_EHAV",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_UMS8",
+              "UseBuffer": true,
+              "BufferSize": 32
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "container_value_R",
+            "Width": 1024,
+            "Height": 80,
+            "TextId": "__SingleUse_LJY2",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_KFQ2",
+              "UseBuffer": true,
+              "BufferSize": 32
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "container_value_C",
+            "Width": 1024,
+            "Height": 80,
+            "TextId": "__SingleUse_84RD",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_V1SI",
+              "UseBuffer": true,
+              "BufferSize": 32
+            }
+          }
+        ],
+        "Interactions": []
+      }
+    ],
+    "Name": "MyApplication",
+    "Resolution": {
+      "Width": 1024,
+      "Height": 600
+    },
+    "SelectedColorDepth": 16,
+    "StartupScreenName": "Boot",
+    "SelectedStartupLanguage": "GB",
+    "TouchGfxPath": "../Middlewares/ST/touchgfx",
+    "UIPath": ".",
+    "AvailableColorDepths": [
+      16
+    ],
+    "AvailableLCDs": {
+      "16": "LCD16bpp"
+    },
+    "AvailableSections": [
+      "ExtFlashSection",
+      "IntFlashSection"
+    ],
+    "AvailableResolutions": [
+      {
+        "Width": 1024,
+        "Height": 600
+      }
+    ],
+    "PhysicalButtons": [],
+    "FrameworkFeatures": {
+      "LCD16bpp": {
+        "Id": "LCD16bpp",
+        "IsEnabled": true
+      }
+    },
+    "GenerateAssetsCommand": "make -f simulator/gcc/Makefile assets -j8",
+    "PostGenerateCommand": "touchgfx update_project --project-file=simulator/msvs/Application.vcxproj",
+    "PostGenerateTargetCommand": "touchgfx update_project",
+    "CompileSimulatorCommand": "make -f simulator/gcc/Makefile -j8",
+    "RunSimulatorCommand": "build\\bin\\simulator.exe",
+    "LandscapeSkinX": 0,
+    "LandscapeSkinY": 0,
+    "PortraitSkinX": 0,
+    "PortraitSkinY": 0,
+    "DisplayOrientation": "Landscape",
+    "Family": "STM32F4",
+    "SubFamily": "STM32F429/439",
+    "Toolchain": "STM32CubeIDE",
+    "Platform": "m4",
+    "ProjectFile": "../LCD_CAR.ioc",
+    "OptionalComponentsRoot": "../Middlewares/ST/touchgfx_components",
+    "OptionalComponents": [],
+    "AdditionalFeatures": []
+  },
+  "Version": "4.23.0"
+}

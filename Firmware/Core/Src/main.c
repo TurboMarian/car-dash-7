@@ -2232,7 +2232,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 				case 0x5F4:
 					Current_Status.BATT = (uint16_t) ((RxData[3] << 8)
 							+ (RxData[2] & 0x00ff)) / 32;
-					// Current_Status.GEAR = (uint16_t)((RxData[7] << 8) + (RxData[6] & 0x00ff));
+					Current_Status.GEAR = (uint16_t)((RxData[7] << 8) + (RxData[6] & 0x00ff));
 					break;
 				case 0x5F5:
 					//Current_Status.BATT = (uint16_t)((RxData[3] << 8) + (RxData[2] & 0x00ff)) / 32;
@@ -3011,22 +3011,33 @@ void Start_HID_SEND_Task(void *argument) {
 	/* USER CODE BEGIN Start_HID_SEND_Task */
 
 	uint8_t outData = 0;
-	uint8_t USBD_CUSTOM_HID_SendReport(USBD_HandleTypeDef *pdev,
-			uint8_t *report, uint16_t len);
+	uint8_t USBD_CUSTOM_HID_SendReport(USBD_HandleTypeDef *pdev, uint8_t *report, uint16_t len);
 
 	/* Infinite loop */
 	for (;;) {
-		outData = outData > 255 ? 0 : outData + 1;
-		USB_TX_Buffer[0] = 0x01;
-		USB_TX_Buffer[1] = 0x02;
-
-		for (int index = 2; index < OPF_HID_EPIN_SIZE; ++index) {
-			USB_TX_Buffer[index] = outData;
-		}
-		USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, USB_TX_Buffer,
-				OPF_HID_EPIN_SIZE);
-
-		osDelay(50);
+//		outData = outData > 255 ? 0 : outData + 1;
+//
+//		for (int index = 2; index < OPF_HID_EPIN_SIZE - 1; ++index) {
+//			USB_TX_Buffer[index] = outData;
+//		}
+//
+//		USB_TX_Buffer[0] = 0x01;
+//		USB_TX_Buffer[1] = 0x08;
+//
+//		USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, USB_TX_Buffer, OPF_HID_EPIN_SIZE);
+//		osDelay(1);
+//
+//		USB_TX_Buffer[0] = 0x02;
+//		USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, USB_TX_Buffer, OPF_HID_EPIN_SIZE);
+//		osDelay(1);
+//
+//		USB_TX_Buffer[0] = 0x03;
+//		USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, USB_TX_Buffer, OPF_HID_EPIN_SIZE);
+//		osDelay(1);
+//
+//		USB_TX_Buffer[0] = 0x04;
+//		USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, USB_TX_Buffer, OPF_HID_EPIN_SIZE);
+		osDelay(1000);
 	}
 	/* USER CODE END Start_HID_SEND_Task */
 }
@@ -3049,79 +3060,79 @@ void Start_HID_RECIEVE_Task(void *argument) {
 
 	/* Infinite loop */
 	for (;;) {
-		if (USB_RX_Ready == 1) {
-			HAL_GPIO_TogglePin(LED_PJ13_GPIO_Port, LED_PJ13_Pin);
-			HAL_GPIO_TogglePin(LED_PJ12_GPIO_Port, LED_PJ12_Pin);
-
-			uint8_t ACTION = USB_RX_Buffer[0];
-			uint8_t ITEM_ID = USB_RX_Buffer[1];
-			uint8_t CONTAINER = USB_RX_Buffer[2];
-
-			uint8_t CURRENT_BATCH = USB_RX_Buffer[3];
-			uint8_t NUMBER_OF_BATCHES = USB_RX_Buffer[4];
-			uint8_t DATA[64];
-
-			for (int i = 0; i < 64; ++i) {
-				DATA[i] = USB_RX_Buffer[i + 5];
-			}
-
-			switch (ACTION) {
-				//SET CONTAINER
-				case 0x04:
-					//LABEL
-					if(CONTAINER >= 0x00 && CONTAINER <= 0x07)
-					{
-						if (CONTAINER == 0x00) strcpy(Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.Text, "ECT");
-						if (CONTAINER == 0x01) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.X = 12;
-						if (CONTAINER == 0x02) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.Y = 85;
-						if (CONTAINER == 0x03) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.Width = 101;
-						if (CONTAINER == 0x04) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.Height = 30;
-						if (CONTAINER == 0x05) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.Alignment =	ALIGN_LEFT;
-						if (CONTAINER == 0x06) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.Text_Color = (COLOR_RGB ) { 255, 255, 255 };
-						if (CONTAINER == 0x07) ;//UNUSED
-					}
-					//UNIT
-					else if(CONTAINER >= 0x08 && CONTAINER <= 0x0F)
-					{
-						if (CONTAINER == 0x08) strcpy(Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.Text, "°C");
-						if (CONTAINER == 0x09) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.X = 150;
-						if (CONTAINER == 0x0A) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.Y = 85;
-						if (CONTAINER == 0x0B) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.Width = 101;
-						if (CONTAINER == 0x0C) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.Height = 30;
-						if (CONTAINER == 0x0D) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.Alignment = ALIGN_RIGHT;
-						if (CONTAINER == 0x0E) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.Text_Color = (COLOR_RGB ) { 255, 255, 255 };
-						if (CONTAINER == 0x0F) ;//UNUSED
-					}
-					//VALUE
-					else if(CONTAINER >= 0x10 && CONTAINER <= 0x17)
-					{
-						if (CONTAINER == 0x10) strcpy(Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.Text, "0");
-						if (CONTAINER == 0x11) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.X = 12;
-						if (CONTAINER == 0x12) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.Y = -5;
-						if (CONTAINER == 0x13) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.Width = 44;
-						if (CONTAINER == 0x14) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.Height = 96;
-						if (CONTAINER == 0x15) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.Alignment = ALIGN_LEFT;
-						if (CONTAINER == 0x16) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.Text_Color = (COLOR_RGB ) { 255, 255, 255 };
-						if (CONTAINER == 0x17) ;//UNUSED
-					}
-					//DATA
-					else if(CONTAINER >= 0x18 && CONTAINER <= 0x1F)
-					{
-						if (CONTAINER == 0x18) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Data.Channel = CH_ECT;
-						if (CONTAINER == 0x19) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Data.Adder = 0;
-						if (CONTAINER == 0x1A) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Data.Decimal = 0;
-						if (CONTAINER == 0x1B) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Data.Divider = 10;
-						if (CONTAINER == 0x1C) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Data.Default = 0;
-						if (CONTAINER == 0x1D) ;//UNUSED
-						if (CONTAINER == 0x1E) ;//UNUSED
-						if (CONTAINER == 0x1F) ;//UNUSED
-					}
-				break;
-			}
-
-			USB_RX_Ready = 0;
-			USBD_CUSTOM_HID_ReceivePacket(&hUsbDeviceFS);
-		}
+//		if (USB_RX_Ready == 1) {
+//			HAL_GPIO_TogglePin(LED_PJ13_GPIO_Port, LED_PJ13_Pin);
+//			HAL_GPIO_TogglePin(LED_PJ12_GPIO_Port, LED_PJ12_Pin);
+//
+//			uint8_t ACTION = USB_RX_Buffer[0];
+//			uint8_t ITEM_ID = USB_RX_Buffer[1];
+//			uint8_t CONTAINER = USB_RX_Buffer[2];
+//
+//			uint8_t CURRENT_BATCH = USB_RX_Buffer[3];
+//			uint8_t NUMBER_OF_BATCHES = USB_RX_Buffer[4];
+//			uint8_t DATA[64];
+//
+//			for (int i = 0; i < 64; ++i) {
+//				DATA[i] = USB_RX_Buffer[i + 5];
+//			}
+//
+//			switch (ACTION) {
+//				//SET CONTAINER
+//				case 0x04:
+//					//LABEL
+//					if(CONTAINER >= 0x00 && CONTAINER <= 0x07)
+//					{
+//						if (CONTAINER == 0x00) strcpy(Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.Text, "ECT");
+//						if (CONTAINER == 0x01) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.X = 12;
+//						if (CONTAINER == 0x02) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.Y = 85;
+//						if (CONTAINER == 0x03) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.Width = 101;
+//						if (CONTAINER == 0x04) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.Height = 30;
+//						if (CONTAINER == 0x05) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.Alignment =	ALIGN_LEFT;
+//						if (CONTAINER == 0x06) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Label.Text_Color = (COLOR_RGB ) { 255, 255, 255 };
+//						if (CONTAINER == 0x07) ;//UNUSED
+//					}
+//					//UNIT
+//					else if(CONTAINER >= 0x08 && CONTAINER <= 0x0F)
+//					{
+//						if (CONTAINER == 0x08) strcpy(Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.Text, "°C");
+//						if (CONTAINER == 0x09) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.X = 150;
+//						if (CONTAINER == 0x0A) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.Y = 85;
+//						if (CONTAINER == 0x0B) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.Width = 101;
+//						if (CONTAINER == 0x0C) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.Height = 30;
+//						if (CONTAINER == 0x0D) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.Alignment = ALIGN_RIGHT;
+//						if (CONTAINER == 0x0E) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Unit.Text_Color = (COLOR_RGB ) { 255, 255, 255 };
+//						if (CONTAINER == 0x0F) ;//UNUSED
+//					}
+//					//VALUE
+//					else if(CONTAINER >= 0x10 && CONTAINER <= 0x17)
+//					{
+//						if (CONTAINER == 0x10) strcpy(Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.Text, "0");
+//						if (CONTAINER == 0x11) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.X = 12;
+//						if (CONTAINER == 0x12) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.Y = -5;
+//						if (CONTAINER == 0x13) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.Width = 44;
+//						if (CONTAINER == 0x14) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.Height = 96;
+//						if (CONTAINER == 0x15) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.Alignment = ALIGN_LEFT;
+//						if (CONTAINER == 0x16) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Value.Text_Color = (COLOR_RGB ) { 255, 255, 255 };
+//						if (CONTAINER == 0x17) ;//UNUSED
+//					}
+//					//DATA
+//					else if(CONTAINER >= 0x18 && CONTAINER <= 0x1F)
+//					{
+//						if (CONTAINER == 0x18) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Data.Channel = CH_ECT;
+//						if (CONTAINER == 0x19) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Data.Adder = 0;
+//						if (CONTAINER == 0x1A) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Data.Decimal = 0;
+//						if (CONTAINER == 0x1B) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Data.Divider = 10;
+//						if (CONTAINER == 0x1C) Dash_Settings.SCREEN_CONTAINERS[ITEM_ID].Data.Default = 0;
+//						if (CONTAINER == 0x1D) ;//UNUSED
+//						if (CONTAINER == 0x1E) ;//UNUSED
+//						if (CONTAINER == 0x1F) ;//UNUSED
+//					}
+//				break;
+//			}
+//
+//			USB_RX_Ready = 0;
+//			USBD_CUSTOM_HID_ReceivePacket(&hUsbDeviceFS);
+//		}
 		osDelay(100);
 	}
 	/* USER CODE END Start_HID_RECIEVE_Task */

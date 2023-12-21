@@ -15,8 +15,8 @@ BootViewBase::BootViewBase()
     box1.setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
     add(box1);
 
-    logo.setXY(102, 190);
-    logo.setBitmap(touchgfx::Bitmap(BITMAP_LOGO2_ID));
+    logo.setXY(192, 191);
+    logo.setBitmap(touchgfx::Bitmap(BITMAP_LOGO3_ID));
     add(logo);
 }
 

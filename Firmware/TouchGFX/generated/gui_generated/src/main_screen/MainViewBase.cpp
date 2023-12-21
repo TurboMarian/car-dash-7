@@ -59,6 +59,15 @@ MainViewBase::MainViewBase()
     gear.setTypedText(touchgfx::TypedText(T___SINGLEUSE_JSL3));
     add(gear);
 
+    rpm.setXY(502, 176);
+    rpm.setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
+    rpm.setLinespacing(0);
+    Unicode::snprintf(rpmBuffer, RPM_SIZE, "%s", touchgfx::TypedText(T_GEAR).getText());
+    rpm.setWildcard(rpmBuffer);
+    rpm.resizeToCurrentText();
+    rpm.setTypedText(touchgfx::TypedText(T___SINGLEUSE_JF06));
+    add(rpm);
+
     logo.setXY(565, 329);
     logo.setBitmap(touchgfx::Bitmap(BITMAP_LOGO_ID));
     add(logo);
@@ -91,7 +100,7 @@ MainViewBase::MainViewBase()
     indPark.setBitmap(touchgfx::Bitmap(BITMAP_INDPARK_ID));
     add(indPark);
 
-    indDTC.setXY(488, 218);
+    indDTC.setXY(576, 251);
     indDTC.setBitmap(touchgfx::Bitmap(BITMAP_INDDTC_ID));
     add(indDTC);
 

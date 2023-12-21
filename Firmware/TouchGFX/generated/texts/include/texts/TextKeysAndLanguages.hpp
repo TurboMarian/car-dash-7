@@ -12,6 +12,7 @@ enum LANGUAGES
 
 enum TEXTS
 {
+    T___SINGLEUSE_JF06,
     T_GEAR_LABEL,
     T_GEAR,
     T___SINGLEUSE_JSL3,

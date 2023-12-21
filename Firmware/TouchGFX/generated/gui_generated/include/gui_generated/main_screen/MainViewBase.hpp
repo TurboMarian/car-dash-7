@@ -43,6 +43,7 @@ protected:
     touchgfx::Image image1;
     touchgfx::TextArea gear_label;
     touchgfx::TextAreaWithOneWildcard gear;
+    touchgfx::TextAreaWithOneWildcard rpm;
     touchgfx::Image logo;
     touchgfx::Image indLeft;
     touchgfx::Image indRight;
@@ -62,6 +63,8 @@ protected:
      */
     static const uint16_t GEAR_SIZE = 10;
     touchgfx::Unicode::UnicodeChar gearBuffer[GEAR_SIZE];
+    static const uint16_t RPM_SIZE = 10;
+    touchgfx::Unicode::UnicodeChar rpmBuffer[RPM_SIZE];
 
 private:
 

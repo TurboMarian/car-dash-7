@@ -105,7 +105,7 @@ typedef struct _USBD_CUSTOM_HID_Itf
   uint8_t *pReport;
   int8_t (* Init)(void);
   int8_t (* DeInit)(void);
-  int8_t (* OutEvent)(uint8_t event_idx, uint8_t state);
+  int8_t (*OutEvent)(uint8_t event_idx, uint8_t state);
 
 } USBD_CUSTOM_HID_ItfTypeDef;
 
