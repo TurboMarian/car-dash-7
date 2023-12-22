@@ -94,64 +94,6 @@
             "RelativeFilename": "race_dash_full.png"
           },
           {
-            "Type": "TextArea",
-            "Name": "gear_label",
-            "X": 700,
-            "Y": 400,
-            "Width": 53,
-            "Height": 30,
-            "TextId": "gear_label",
-            "TextRotation": "0",
-            "Color": {
-              "Red": 255,
-              "Green": 255,
-              "Blue": 255
-            },
-            "AutoSize": true
-          },
-          {
-            "Type": "TextArea",
-            "Name": "gear",
-            "X": 575,
-            "Y": 371,
-            "Width": 93,
-            "Height": 180,
-            "TextId": "__SingleUse_JSL3",
-            "TextRotation": "0",
-            "Color": {
-              "Red": 255,
-              "Green": 255,
-              "Blue": 255
-            },
-            "AutoSize": true,
-            "Wildcard1": {
-              "TextId": "gear",
-              "UseBuffer": true,
-              "BufferSize": 10
-            }
-          },
-          {
-            "Type": "TextArea",
-            "Name": "rpm",
-            "X": 502,
-            "Y": 176,
-            "Width": 50,
-            "Height": 96,
-            "TextId": "__SingleUse_JF06",
-            "TextRotation": "0",
-            "Color": {
-              "Red": 255,
-              "Green": 255,
-              "Blue": 255
-            },
-            "AutoSize": true,
-            "Wildcard1": {
-              "TextId": "gear",
-              "UseBuffer": true,
-              "BufferSize": 10
-            }
-          },
-          {
             "Type": "Image",
             "Name": "logo",
             "X": 565,
@@ -249,6 +191,63 @@
             "Width": 48,
             "Height": 30,
             "RelativeFilename": "indLow.png"
+          },
+          {
+            "Type": "TextArea",
+            "Name": "gear",
+            "X": 575,
+            "Y": 371,
+            "Width": 93,
+            "Height": 180,
+            "TextId": "__SingleUse_JSL3",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "gear",
+              "UseBuffer": true,
+              "BufferSize": 10
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "gear_label",
+            "X": 700,
+            "Y": 400,
+            "Width": 53,
+            "Height": 30,
+            "TextId": "gear_label",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true
+          },
+          {
+            "Type": "TextArea",
+            "Name": "rpm",
+            "X": 399,
+            "Y": 176,
+            "Width": 252,
+            "Height": 93,
+            "TextId": "__SingleUse_JF06",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "Wildcard1": {
+              "TextId": "gear",
+              "UseBuffer": true,
+              "BufferSize": 10
+            }
           },
           {
             "Type": "Gauge",

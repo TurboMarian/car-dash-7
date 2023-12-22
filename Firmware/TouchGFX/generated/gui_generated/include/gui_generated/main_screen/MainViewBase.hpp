@@ -10,8 +10,8 @@
 #include <touchgfx/widgets/Box.hpp>
 #include <gui/containers/value_container.hpp>
 #include <touchgfx/widgets/Image.hpp>
-#include <touchgfx/widgets/TextArea.hpp>
 #include <touchgfx/widgets/TextAreaWithWildcard.hpp>
+#include <touchgfx/widgets/TextArea.hpp>
 #include <touchgfx/widgets/Gauge.hpp>
 #include <gui/containers/message_container.hpp>
 
@@ -41,9 +41,6 @@ protected:
     value_container container_6;
     value_container container_7;
     touchgfx::Image image1;
-    touchgfx::TextArea gear_label;
-    touchgfx::TextAreaWithOneWildcard gear;
-    touchgfx::TextAreaWithOneWildcard rpm;
     touchgfx::Image logo;
     touchgfx::Image indLeft;
     touchgfx::Image indRight;
@@ -55,6 +52,9 @@ protected:
     touchgfx::Image indDTC;
     touchgfx::Image indECT;
     touchgfx::Image indLow;
+    touchgfx::TextAreaWithOneWildcard gear;
+    touchgfx::TextArea gear_label;
+    touchgfx::TextAreaWithOneWildcard rpm;
     touchgfx::Gauge gauge1;
     message_container message_container_0;
 

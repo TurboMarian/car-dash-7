@@ -44,30 +44,6 @@ MainViewBase::MainViewBase()
     image1.setBitmap(touchgfx::Bitmap(BITMAP_RACE_DASH_FULL_ID));
     add(image1);
 
-    gear_label.setXY(700, 400);
-    gear_label.setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
-    gear_label.setLinespacing(0);
-    gear_label.setTypedText(touchgfx::TypedText(T_GEAR_LABEL));
-    add(gear_label);
-
-    gear.setXY(575, 371);
-    gear.setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
-    gear.setLinespacing(0);
-    Unicode::snprintf(gearBuffer, GEAR_SIZE, "%s", touchgfx::TypedText(T_GEAR).getText());
-    gear.setWildcard(gearBuffer);
-    gear.resizeToCurrentText();
-    gear.setTypedText(touchgfx::TypedText(T___SINGLEUSE_JSL3));
-    add(gear);
-
-    rpm.setXY(502, 176);
-    rpm.setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
-    rpm.setLinespacing(0);
-    Unicode::snprintf(rpmBuffer, RPM_SIZE, "%s", touchgfx::TypedText(T_GEAR).getText());
-    rpm.setWildcard(rpmBuffer);
-    rpm.resizeToCurrentText();
-    rpm.setTypedText(touchgfx::TypedText(T___SINGLEUSE_JF06));
-    add(rpm);
-
     logo.setXY(565, 329);
     logo.setBitmap(touchgfx::Bitmap(BITMAP_LOGO_ID));
     add(logo);
@@ -111,6 +87,29 @@ MainViewBase::MainViewBase()
     indLow.setXY(447, 290);
     indLow.setBitmap(touchgfx::Bitmap(BITMAP_INDLOW_ID));
     add(indLow);
+
+    gear.setXY(575, 371);
+    gear.setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
+    gear.setLinespacing(0);
+    Unicode::snprintf(gearBuffer, GEAR_SIZE, "%s", touchgfx::TypedText(T_GEAR).getText());
+    gear.setWildcard(gearBuffer);
+    gear.resizeToCurrentText();
+    gear.setTypedText(touchgfx::TypedText(T___SINGLEUSE_JSL3));
+    add(gear);
+
+    gear_label.setXY(700, 400);
+    gear_label.setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
+    gear_label.setLinespacing(0);
+    gear_label.setTypedText(touchgfx::TypedText(T_GEAR_LABEL));
+    add(gear_label);
+
+    rpm.setPosition(399, 176, 252, 93);
+    rpm.setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
+    rpm.setLinespacing(0);
+    Unicode::snprintf(rpmBuffer, RPM_SIZE, "%s", touchgfx::TypedText(T_GEAR).getText());
+    rpm.setWildcard(rpmBuffer);
+    rpm.setTypedText(touchgfx::TypedText(T___SINGLEUSE_JF06));
+    add(rpm);
 
     gauge1.setPosition(225, -1, 600, 600);
     gauge1.setCenter(300, 300);

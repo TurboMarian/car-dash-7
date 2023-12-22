@@ -10,6 +10,14 @@ MainView::MainView() {
 
 
 void MainView::setupScreen() {
+
+
+	__background.setPosition(0, 0, LCD_RES_H, LCD_RES_V);
+	__background.invalidate();
+
+//    background.setPosition(-3, 1, LCD_RES_H, LCD_RES_V);
+//	container_0.invalidate();
+
 	MainViewBase::setupScreen();
 
 	//Bitmap::cache(BITMAP_RACE_DASH_FULL_ID);
@@ -123,11 +131,9 @@ void MainView::handleTickEvent() {
 
 	gauge1.updateValue(Current_Status.RPM, 0);
 
-
 	Unicode::UnicodeChar buffer[10];
 	Unicode::snprintfFloat(buffer, 10, "%.0f", Current_Status.RPM);
 	Unicode::snprintf(rpmBuffer, 10, "%s", buffer);
-	rpm.resizeToCurrentTextWithAlignment();
 	rpm.setVisible(true);
 	rpm.invalidate();
 
